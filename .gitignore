@@ -1,0 +1,27 @@
+# === IntelliJ IDEA / Android Studio ===
+.idea/
+*.iml
+out/
+
+# === Gradle ===
+.gradle/
+build/
+app/build/
+
+# === Android ===
+local.properties
+*.keystore
+*.jks
+
+# === Logs y temporales ===
+*.log
+*.tmp
+*.lock
+
+# === Sistema operativo ===
+.DS_Store
+Thumbs.db
+
+# === Otros ===
+# Ignorar archivos de caché o configuración temporal
+.cache/
