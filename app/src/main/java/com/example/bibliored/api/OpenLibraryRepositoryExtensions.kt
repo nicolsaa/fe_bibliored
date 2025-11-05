@@ -10,5 +10,6 @@ import com.example.bibliored.api.OpenLibraryRepository
  */
 suspend fun OpenLibraryRepository.fetchBookByIsbn(
     isbn: String,
+    correo: String,
     resolveAuthors: Boolean = true
-): Result<Libro> = this.getLibroByIsbn(isbn, resolveAuthors)
+): Result<Libro> = this.getLibroByIsbn(isbn, correo, resolveAuthors)

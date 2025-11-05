@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.bibliored.data.SessionPrefs
+import com.example.bibliored.view.BookDetailScreen
 import com.example.bibliored.view.FormScreen
 import com.example.bibliored.view.HomeScreen
 import com.example.bibliored.view.SplashScreen
@@ -39,6 +40,7 @@ object Routes {
     const val Home   = "home/{nombre}"
     const val Add    = "add"
     const val FormScreen = "formScreen"
+    const val BookDetail = "bookDetail"
 }
 
 @Composable
@@ -121,7 +123,11 @@ fun AppNav(modifier: Modifier = Modifier) {
         Cuando termina (onDone()), usa nav.popBackStack() para volver atrás al HomeScreen.*/
         composable(Routes.Add) {
             AddBookScreen(
-                onDone = { nav.popBackStack() }  // vuelve a Home luego de agregar
+                onDone = { nav.popBackStack() },
+                openDetail = { libro ->
+                    com.example.bibliored.util.SelectedBookNav.currentLibro = libro
+                    nav.navigate(Routes.BookDetail)
+                }
             )
         }
 
@@ -134,6 +140,10 @@ fun AppNav(modifier: Modifier = Modifier) {
                     }
                 }
             )
+        }
+
+        composable(Routes.BookDetail) {
+            BookDetailScreen(onBack = { com.example.bibliored.util.SelectedBookNav.currentLibro = null; nav.popBackStack() }, libro = null)
         }
     }
 }

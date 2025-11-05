@@ -14,10 +14,20 @@ import com.example.bibliored.model.Libro
 import com.example.bibliored.model.PortadaUrl
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.flow.collect
+import com.example.bibliored.controller.UiState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import com.example.bibliored.controller.LibroViewModel
+import com.example.bibliored.controller.LoginState
+import com.example.bibliored.data.SessionPrefs
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /*pantalla temporal (demo) para agregar libros a tu biblioteca.
 Este nuevo flujo permite ingresar un ISBN, buscar automáticamente y rellenar
@@ -33,8 +43,36 @@ fun AddBookScreen(
     var libroPreview by remember { mutableStateOf<Libro?>(null) }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    val _estado: MutableStateFlow<LoginState> = MutableStateFlow(LoginState.Idle)
+    val estado: StateFlow<LoginState> = _estado.asStateFlow()
+    val ctx = LocalContext.current
+    val sessionPrefs = remember(ctx) { SessionPrefs(ctx) }
+    val vm = remember { LibroViewModel(sessionPrefs = sessionPrefs) }
+val scope = rememberCoroutineScope()
 
-    val scope = rememberCoroutineScope()
+    // Observe ViewModel UI state to trigger navigation and show feedback
+    LaunchedEffect(Unit) {
+        vm.estado.collect { state ->
+            when (state) {
+                is UiState.Cargando -> loading = true
+                is UiState.Ok -> {
+                    loading = false
+                    libroPreview = state.libro
+                    val l = state.libro
+                    if (openDetail != null) {
+                        openDetail(l)
+                    } else {
+                        onDone()
+                    }
+                }
+                is UiState.Error -> {
+                    loading = false
+                    error = state.msg
+                }
+                else -> { /* Idle */ }
+            }
+        }
+    }
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -55,13 +93,7 @@ fun AddBookScreen(
                         loading = true
                         error = null
                         try {
-                            val repo = com.example.bibliored.api.OpenLibraryRepository.default()
-                            val result = repo.getLibroByIsbn(isbn)
-                            result.onSuccess { libro ->
-                                libroPreview = libro
-                            }.onFailure { t ->
-                                error = t.message ?: "Error al buscar ISBN"
-                            }
+                            vm.cargarPorIsbn(isbn)
                         } catch (e: Exception) {
                             error = e.message ?: "Error desconocido"
                         } finally {

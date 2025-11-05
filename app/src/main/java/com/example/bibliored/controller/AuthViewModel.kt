@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bibliored.api.AuthRepository
 import com.example.bibliored.api.ApiAuthRepository
+import com.example.bibliored.data.SessionPrefs
 import com.example.bibliored.model.Usuario
 import com.example.bibliored.view.FormScreen
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +20,8 @@ sealed interface LoginState {
 }
 
 class AuthViewModel(
-private val repo: AuthRepository = ApiAuthRepository.default()
+    private val repo: AuthRepository = ApiAuthRepository.default(),
+    private val sessionPrefs: SessionPrefs
 ) : ViewModel() {
 
     private val _estado: MutableStateFlow<LoginState> = MutableStateFlow(LoginState.Idle)
@@ -46,9 +48,19 @@ private val repo: AuthRepository = ApiAuthRepository.default()
             _estado.value = LoginState.Loading
             val res = repo.login(correo, contrasena)
             _estado.value = res.fold(
-                onSuccess = { LoginState.Success(it) },
+                onSuccess = { sessionPrefs.setLoggedIn(
+                    0L,
+                    it.nombre,
+                    it.correo)
+                    LoginState.Success(it) },
                 onFailure = { LoginState.Error("Usuario no válido") }
             )
+        }
+    }
+    fun logout() {
+        viewModelScope.launch {
+            sessionPrefs.clear()
+            _estado.value = LoginState.Idle
         }
     }
 

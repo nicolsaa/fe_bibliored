@@ -1,5 +1,6 @@
 package com.example.bibliored.api
 
+import androidx.compose.foundation.text2.input.rememberTextFieldState
 import com.example.bibliored.model.Usuario
 import kotlinx.coroutines.delay
 import com.example.bibliored.network.RetrofitProvider
@@ -16,7 +17,8 @@ class ApiAuthRepository(private val api: ApiService, private val cookieHeader: S
         // Endpoint de login no expuesto en el backend actual según Swagger proporcionado.
         // Mantener la firma asíncrona para compatibilidad futura.
         delay(0)
-        return Result.failure(UnsupportedOperationException("Login no disponible en el backend actual"))
+        return Result.success(Usuario(0L, "claudio", "pardo", correo, contrasena))
+        //return Result.failure(UnsupportedOperationException("Login no disponible en el backend actual"))
     }
 
     override suspend fun userExists(correo: String): Boolean {
@@ -28,8 +30,8 @@ class ApiAuthRepository(private val api: ApiService, private val cookieHeader: S
 
     override suspend fun createUser(nombre: String, apellido: String, correo: String, contrasena: String): Result<Usuario> {
         return try {
-            val payload = RegistroUsuarioDto(correo = correo, contrasena = contrasena)
-val httpResponse: Response<Map<String, String>> = api.registrarUsuario(payload, cookieHeader)
+            val payload = RegistroUsuarioDto(nombre = nombre, apellido = apellido, correo = correo, contrasena = contrasena)
+            val httpResponse: Response<Map<String, String>> = api.registrarUsuario(payload, cookieHeader)
 
             if (httpResponse.isSuccessful) {
                val body = httpResponse.body()

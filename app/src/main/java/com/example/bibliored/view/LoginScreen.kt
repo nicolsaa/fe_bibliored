@@ -1,5 +1,6 @@
 package com.example.bibliored.view.login
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,12 +34,15 @@ También limpia el back stack (ya no puedes volver al login).*/
 fun LoginScreen(
     onLoggedIn: (nombreCompleto: String) -> Unit,
     onNavigateToRegister: () -> Unit = {},
-    vm: AuthViewModel = viewModel()
+    //vm: AuthViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val sessionPrefs = remember { SessionPrefs(context) }
+    val vm = remember { AuthViewModel(sessionPrefs = sessionPrefs) }
+
     val estado = vm.estado.collectAsStateWithLifecycle().value // estado actual del login
     val userExistsState by vm.userExists.collectAsStateWithLifecycle()
-    val ctx = LocalContext.current
-    val sessionPrefs = remember(ctx) { SessionPrefs(ctx) }
+
     val scope = rememberCoroutineScope()
     var correo by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }

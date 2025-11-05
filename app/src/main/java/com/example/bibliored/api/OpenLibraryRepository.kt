@@ -10,29 +10,58 @@ import com.example.bibliored.network.ConverterKind
 import com.example.bibliored.network.dto.KeyRef
 import com.example.bibliored.network.dto.OpenLibraryEditionDto
 import com.example.bibliored.network.dto.descriptionTextOrNull
+import com.example.bibliored.network.dto.response.LibroResponseDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import com.example.bibliored.util.NetworkDiagnostics
+import kotlin.streams.toList
 
 class OpenLibraryRepository(
-    private val api: OpenLibraryService
+    private val openLibraryService: OpenLibraryService,
+    private val apiService: ApiService
 ) {
 
 suspend fun getLibroByIsbn(
         isbn: String,
+        correo: String,
         resolveAuthors: Boolean = true
     ): Result<Libro> = withContext(Dispatchers.IO) {
         runCatching {
             val dnsOk = NetworkDiagnostics.isHostResolvable("openlibrary.org")
             if (!dnsOk) throw java.io.IOException("DNS resolution failed for host openlibrary.org")
-            val dto = api.getEditionByIsbn(isbn)
+            val dto = openLibraryService.getEditionByIsbn(isbn)
 
             val autores: List<Autor> = if (resolveAuthors) {
                 resolveAuthors(dto.authors.orEmpty())
             } else emptyList()
 
             dto.toLibro(autores)
+            val libroRequest: MutableMap<String, String> = mutableMapOf()
+            libroRequest["isbn"] = isbn
+            libroRequest["correoPropietario"] = correo
+
+            val libroResponseDto = apiService.addBook(libroRequest)
+
+            val body = libroResponseDto.body()
+                ?: throw IllegalStateException("no book present in response body")
+
+            val autoresApi = body.autores.stream().map { autor -> Autor(autor.id, autor.nombre) }
+                .toList()
+            val coverId= dto.covers?.get(0)
+
+            val libro = Libro(
+                isbn10 = isbn,
+                isbn13 = isbn,
+                titulo = body.titulo,
+                autores = autoresApi,
+                descripcion = dto.description?.toString(),
+                portada = buildPortada(coverId, isbn),
+                workKey = "",
+                editionKey = ""
+                )
+
+            libro
         }.recoverCatching { e ->
             when (e) {
                 is HttpException -> {
@@ -54,7 +83,7 @@ suspend fun getLibroByIsbn(
         return refs.mapNotNull { ref ->
             val raw = ref.key ?: return@mapNotNull null
             val key = raw.trimStart('/') // "/authors/OL123A" -> "authors/OL123A"
-            val dto = api.getGenericByKey(key) // devuelve name, etc.
+            val dto = openLibraryService.getGenericByKey(key) // devuelve name, etc.
             val nombre = dto.name ?: return@mapNotNull null
             Autor(id = 0L, nombre = nombre) // OL no da id numérico estable
         }
@@ -69,8 +98,17 @@ suspend fun getLibroByIsbn(
                 enableLogging = true, // si molestan los logs, pon false
                 userAgent = "BiblioRed/1.0 (Android)"
             )
-            val api = RetrofitProvider.create<OpenLibraryService>(config)
-            return OpenLibraryRepository(api)
+
+            val configApi = ApiConfig(
+                baseUrl = "http://10.0.2.2:8080",
+                converter = ConverterKind.MOSHI,
+                enableLogging = true, // si molestan los logs, pon false
+                userAgent = "BiblioRed/1.0 (Android)"
+            )
+
+            val openLibrary  = RetrofitProvider.create<OpenLibraryService>(config)
+            val api  = RetrofitProvider.create<ApiService>(configApi)
+            return OpenLibraryRepository(openLibrary, api)
         }
     }
 }
