@@ -52,7 +52,7 @@ class ApiAuthRepository(private val api: ApiService, private val cookieHeader: S
                 val errorContent = httpResponse.errorBody()?.string()
                 Result.failure(IOException("Error al registrar usuario: $errorContent"))
             }
-    } catch (t: Throwable) {
+        } catch (t: Throwable) {
             // Provide more context for JSON parsing errors
             if (t is com.squareup.moshi.JsonDataException) {
                 Result.failure(IOException("Malformed JSON in response from registrarUsuario: ${t.message}"))

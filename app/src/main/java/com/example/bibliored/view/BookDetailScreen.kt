@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.bibliored.model.Libro
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import com.example.bibliored.util.SelectedBookNav
 
@@ -27,7 +28,7 @@ fun BookDetailScreen(
             CenterAlignedTopAppBar(
                 title = { Text(libroData.titulo) },
                 navigationIcon = if (onBack != null) {
-                    { IconButton(onClick = { onBack.invoke() }) { Icon(Icons.Filled.ArrowBack, contentDescription = "Back") } }
+                    { IconButton(onClick = { onBack.invoke() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") } }
                 } else {
                     { /* no back button */ }
                 }
@@ -37,12 +38,12 @@ fun BookDetailScreen(
         Column(modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize()) {
             Portada(libro = libroData, modifier = Modifier.fillMaxWidth().height(240.dp))
             Spacer(Modifier.height(12.dp))
-            Text(libroData.titulo, style = MaterialTheme.typography.titleLarge)
+            Text(libroData.titulo, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
             Spacer(Modifier.height(4.dp))
             val autores = libroData.autores.joinToString { it.nombre }
-            Text(autores, style = MaterialTheme.typography.bodyMedium)
+            Text(autores, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onBackground)
             Spacer(Modifier.height(8.dp))
-            Text(libroData.descripcion ?: "", style = MaterialTheme.typography.bodyMedium)
+            Text(libroData.descripcion ?: "", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onBackground)
         }
     }
 }
