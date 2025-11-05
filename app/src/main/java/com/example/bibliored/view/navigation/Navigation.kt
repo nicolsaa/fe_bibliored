@@ -15,6 +15,7 @@ import com.example.bibliored.view.HomeScreen
 import com.example.bibliored.view.SplashScreen
 import com.example.bibliored.view.add.AddBookScreen
 import com.example.bibliored.view.login.LoginScreen
+import com.example.bibliored.view.navigation.Routes.Home
 
 /*👉 Es el “mapa de rutas” de toda la app.
 Cada composable() dentro del NavHost representa una pantalla, y el NavController se encarga de moverse entre ellas (como si fueran páginas). 
@@ -41,6 +42,8 @@ object Routes {
     const val Add    = "add"
     const val FormScreen = "formScreen"
     const val BookDetail = "bookDetail"
+
+    const val AddBook = "addBook"
 }
 
 @Composable
@@ -103,7 +106,7 @@ fun AppNav(modifier: Modifier = Modifier) {
 
 
         composable(
-            route = Routes.Home,
+            route = Home,
             arguments = listOf(navArgument("nombre") { type = NavType.StringType })
         ) { backStackEntry ->
             val nombre = backStackEntry.arguments?.getString("nombre") ?: "Usuario"
@@ -112,7 +115,7 @@ fun AppNav(modifier: Modifier = Modifier) {
                 sessionPrefs = sessionPrefs,
                 onLogout = {
                     nav.navigate(Routes.Login) {
-                        popUpTo(Routes.Home) { inclusive = true }
+                        popUpTo(Home) { inclusive = true }
                     }
                 },
                 onAddClick = { nav.navigate(Routes.Add) }   // ⬅️ navega a Agregar/Escanear
@@ -143,7 +146,13 @@ fun AppNav(modifier: Modifier = Modifier) {
         }
 
         composable(Routes.BookDetail) {
-            BookDetailScreen(onBack = { com.example.bibliored.util.SelectedBookNav.currentLibro = null; nav.popBackStack() }, libro = null)
+            BookDetailScreen(onBack = { com.example.bibliored.util.SelectedBookNav.currentLibro = null; nav.popBackStack() }, libro = null,
+                onDone = {nav.navigate(Home)})
         }
+
+        composable(Routes.AddBook) {
+            AddBookScreen(onDone = { nav.navigate(Home) })
+        }
+
     }
 }

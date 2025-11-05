@@ -44,10 +44,10 @@ fun HomeScreen(
     val sessionPrefs = remember(ctx) { SessionPrefs(ctx) }
     val vm = remember { LibraryViewModel(sessionPrefs = sessionPrefs) }
 
-    val scope = rememberCoroutineScope() // scope: para lanzar corrutinas (usado al cerrar sesión).
-    val libros = vm.libros.collectAsStateWithLifecycle().value /* libros: es la lista actual de libros, observada desde el ViewModel.
-                                                                👉 Usa collectAsStateWithLifecycle para mantener el estado sincronizado.*/
-    var selectedTab by remember { mutableStateOf(0) } /*selectedTab: controla qué pestaña está activa en el navbar inferior.
+val scope = rememberCoroutineScope() // scope: para lanzar corrutinas (usado al cerrar sesión).
+val libros by vm.libros.collectAsStateWithLifecycle()
+LaunchedEffect(libros) { if (libros.isEmpty()) vm.getLibros() }
+var selectedTab by remember { mutableStateOf(0) } /*selectedTab: controla qué pestaña está activa en el navbar inferior.
                                                                (por ahora, solo hay una pestaña: “Biblioteca”).*/
     var selectedLibro by remember { mutableStateOf<Libro?>(null) } // libro actualmente seleccionado para ver detalle
 
@@ -95,8 +95,7 @@ fun HomeScreen(
         if (selectedTab == 0) {
             when {
                 selectedLibro != null -> {
-                    val libros = vm.getLibros()
-                    // Mostrar detalle del libro seleccionado y permitir volver
+                    
                     BookDetailScreen(libro = selectedLibro!!) { selectedLibro = null }
                 }
                 libros.isEmpty() -> {

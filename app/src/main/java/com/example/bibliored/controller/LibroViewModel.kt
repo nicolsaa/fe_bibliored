@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.bibliored.api.OpenLibraryRepository
 import com.example.bibliored.data.SessionPrefs
 import com.example.bibliored.model.Libro
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,7 +51,7 @@ class LibroViewModel(
                 throw RuntimeException("no logged in")
             }
 
-            val user = userName ?: "desconocido"
+            val user = userName ?:"desconocido"
 
             val res = repo.getLibroByIsbn(isbn, userEmail, resolveAuthors = true)
 

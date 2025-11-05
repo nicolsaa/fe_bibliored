@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import com.example.bibliored.model.Libro
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 sealed interface LibraryState {
     object Idle : LibraryState
@@ -42,19 +43,16 @@ class LibraryViewModel(
         }
     }
 
-    fun getLibros() {
-        viewModelScope.launch {
-            _estado.value = LibraryState.Loading
-
-            val libros = libroRepository.getLibroPorCorreo(userEmail);
-
-            _estado.value = libros.fold(
-                onSuccess = { LibraryState.Success(it) },
-                onFailure = { LibraryState.Error(it.message ?: "error al obtener libros para $userName") }
-            )
+    suspend fun getLibros(): List<Libro> {
+        // Espera a que userEmail esté inicializado
+        if (!this::userEmail.isInitialized) {
+            while (!this::userEmail.isInitialized) {
+                delay(50)
+            }
         }
-
-
+        val librosList = libroRepository.getLibroPorCorreo(userEmail).getOrThrow()
+        _libros.value = librosList
+        return librosList
     }
 
     fun add(libro: Libro) {

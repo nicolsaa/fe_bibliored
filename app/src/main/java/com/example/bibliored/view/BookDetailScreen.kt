@@ -7,15 +7,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.bibliored.model.Libro
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import com.example.bibliored.util.SelectedBookNav
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookDetailScreen(
     libro: Libro? = null,
-    onBack: (() -> Unit)? = null
+    onBack: (() -> Unit)? = null,
+    onDone: (() -> Unit)? = null
 ) {
     val libroData = libro ?: SelectedBookNav.currentLibro
     if (libroData == null) {
@@ -23,14 +24,16 @@ fun BookDetailScreen(
         return
     }
 
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(libroData.titulo) },
-                navigationIcon = if (onBack != null) {
-                    { IconButton(onClick = { onBack.invoke() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") } }
-                } else {
-                    { /* no back button */ }
+                navigationIcon = {
+                    IconButton(onClick = { onBack?.invoke() ?: backDispatcher?.onBackPressed() }) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    }
                 }
             )
         }

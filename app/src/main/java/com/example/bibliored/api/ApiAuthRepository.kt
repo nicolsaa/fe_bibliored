@@ -17,7 +17,7 @@ class ApiAuthRepository(private val api: ApiService, private val cookieHeader: S
         // Endpoint de login no expuesto en el backend actual según Swagger proporcionado.
         // Mantener la firma asíncrona para compatibilidad futura.
         delay(0)
-        return Result.success(Usuario(0L, "claudio", "pardo", correo, contrasena))
+        return Result.success(Usuario(0L, "test", "prueba", correo, contrasena))
         //return Result.failure(UnsupportedOperationException("Login no disponible en el backend actual"))
     }
 

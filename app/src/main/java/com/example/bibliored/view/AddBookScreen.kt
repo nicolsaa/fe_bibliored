@@ -36,7 +36,7 @@ título, descripcion, portada y autor. Luego se guarda en memoria y se abre el d
 @Composable
 fun AddBookScreen(
     onDone: () -> Unit, // onDone: callback que se ejecuta cuando el usuario termina (por ejemplo, para volver al Home).
-    libraryVm: LibraryViewModel = viewModel(), // tu ViewModel (LibraryViewModel), encargado de manejar la lista de libros en la biblioteca.
+    //libraryVm: LibraryViewModel = viewModel(), // tu ViewModel (LibraryViewModel), encargado de manejar la lista de libros en la biblioteca.
     openDetail: ((Libro) -> Unit)? = null // opcional: abrir detalle del libro después de guardar
 ) {
     var isbn by remember { mutableStateOf("") }
@@ -49,6 +49,7 @@ fun AddBookScreen(
     val ctx = LocalContext.current
     val sessionPrefs = remember(ctx) { SessionPrefs(ctx) }
     val vm = remember { LibroViewModel(sessionPrefs = sessionPrefs) }
+    val libraryVm = remember { LibraryViewModel(sessionPrefs = sessionPrefs) }
     val scope = rememberCoroutineScope()
 
     // Observe ViewModel UI state to trigger navigation and show feedback
@@ -140,13 +141,8 @@ fun AddBookScreen(
 
                 Spacer(Modifier.height(8.dp))
 
-                Button(onClick = {
-                    libroPreview?.let { l ->
-                        libraryVm.add(l)
-                        guardado = true
-                    }
-                }) {
-                    Text("Guardar en biblioteca")
+                Button(onClick = { onDone() }) {
+                    Text("volver a la biblioteca")
                 }
             }
 

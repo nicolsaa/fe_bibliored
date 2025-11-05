@@ -2,6 +2,7 @@ package com.example.bibliored.api
 
 import com.example.bibliored.network.dto.RegistroUsuarioDto
 import com.example.bibliored.network.dto.response.LibroResponseDto
+import com.example.bibliored.network.dto.response.LibroUserResponseDto
 
 import retrofit2.Response
 import retrofit2.http.Body
@@ -18,5 +19,5 @@ interface ApiService {
     suspend fun addBook(@Body body: Map<String, String>): Response<LibroResponseDto>
 
     @GET("/libros/email/{correo}")
-    suspend fun getBookByEmail(@Path("correo") correo: String): Response<Map<String, List<Map<String, String>>>>
+    suspend fun getBookByEmail(@Path("correo") correo: String): Response<LibroUserResponseDto>
 }
