@@ -36,19 +36,21 @@ título, descripcion, portada y autor. Luego se guarda en memoria y se abre el d
 @Composable
 fun AddBookScreen(
     onDone: () -> Unit, // onDone: callback que se ejecuta cuando el usuario termina (por ejemplo, para volver al Home).
-    libraryVm: LibraryViewModel = viewModel(), // tu ViewModel (LibraryViewModel), encargado de manejar la lista de libros en la biblioteca.
+    //libraryVm: LibraryViewModel = viewModel(), // tu ViewModel (LibraryViewModel), encargado de manejar la lista de libros en la biblioteca.
     openDetail: ((Libro) -> Unit)? = null // opcional: abrir detalle del libro después de guardar
 ) {
     var isbn by remember { mutableStateOf("") }
     var libroPreview by remember { mutableStateOf<Libro?>(null) }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var guardado by remember { mutableStateOf(false) }
     val _estado: MutableStateFlow<LoginState> = MutableStateFlow(LoginState.Idle)
     val estado: StateFlow<LoginState> = _estado.asStateFlow()
     val ctx = LocalContext.current
     val sessionPrefs = remember(ctx) { SessionPrefs(ctx) }
     val vm = remember { LibroViewModel(sessionPrefs = sessionPrefs) }
-val scope = rememberCoroutineScope()
+    val libraryVm = remember { LibraryViewModel(sessionPrefs = sessionPrefs) }
+    val scope = rememberCoroutineScope()
 
     // Observe ViewModel UI state to trigger navigation and show feedback
     LaunchedEffect(Unit) {
@@ -58,12 +60,7 @@ val scope = rememberCoroutineScope()
                 is UiState.Ok -> {
                     loading = false
                     libroPreview = state.libro
-                    val l = state.libro
-                    if (openDetail != null) {
-                        openDetail(l)
-                    } else {
-                        onDone()
-                    }
+                    guardado = true
                 }
                 is UiState.Error -> {
                     loading = false
@@ -144,14 +141,8 @@ val scope = rememberCoroutineScope()
 
                 Spacer(Modifier.height(8.dp))
 
-                Button(onClick = {
-                    libroPreview?.let { l ->
-                        libraryVm.add(l)
-                        openDetail?.invoke(l)
-                        onDone()
-                    }
-                }) {
-                    Text("Guardar en biblioteca y abrir detalle")
+                Button(onClick = { onDone() }) {
+                    Text("volver a la biblioteca")
                 }
             }
 
@@ -160,6 +151,10 @@ val scope = rememberCoroutineScope()
             }
 
             Spacer(Modifier.height(16.dp))
+
+            if (guardado) {
+                Text("Libro agregado a la biblioteca", color = MaterialTheme.colorScheme.primary)
+            }
 
             OutlinedButton(onClick = onDone) { Text("Cancelar") }
         }

@@ -12,15 +12,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bibliored.controller.LibraryViewModel
+import com.example.bibliored.controller.LibroViewModel
 import com.example.bibliored.data.SessionPrefs
 import com.example.bibliored.model.Libro
 import com.example.bibliored.view.BookDetailScreen
 import com.example.bibliored.view.Portada
 import kotlinx.coroutines.launch
+import java.util.Collections
 
 /*Esta Composable representa la pantalla principal del usuario logueado.
 nombreCompleto: el nombre del usuario, para mostrar el saludo.
@@ -35,13 +38,16 @@ fun HomeScreen(
     nombreCompleto: String,
     sessionPrefs: SessionPrefs,
     onLogout: () -> Unit,
-    onAddClick: () -> Unit,                 // ← para navegar a “agregar/escanear”
-    vm: LibraryViewModel = viewModel()
+    onAddClick: () -> Unit
 ) {
-    val scope = rememberCoroutineScope() // scope: para lanzar corrutinas (usado al cerrar sesión).
-    val libros = vm.libros.collectAsStateWithLifecycle().value /* libros: es la lista actual de libros, observada desde el ViewModel.
-                                                                👉 Usa collectAsStateWithLifecycle para mantener el estado sincronizado.*/
-    var selectedTab by remember { mutableStateOf(0) } /*selectedTab: controla qué pestaña está activa en el navbar inferior.
+    val ctx = LocalContext.current
+    val sessionPrefs = remember(ctx) { SessionPrefs(ctx) }
+    val vm = remember { LibraryViewModel(sessionPrefs = sessionPrefs) }
+
+val scope = rememberCoroutineScope() // scope: para lanzar corrutinas (usado al cerrar sesión).
+val libros by vm.libros.collectAsStateWithLifecycle()
+LaunchedEffect(libros) { if (libros.isEmpty()) vm.getLibros() }
+var selectedTab by remember { mutableStateOf(0) } /*selectedTab: controla qué pestaña está activa en el navbar inferior.
                                                                (por ahora, solo hay una pestaña: “Biblioteca”).*/
     var selectedLibro by remember { mutableStateOf<Libro?>(null) } // libro actualmente seleccionado para ver detalle
 
@@ -89,7 +95,7 @@ fun HomeScreen(
         if (selectedTab == 0) {
             when {
                 selectedLibro != null -> {
-                    // Mostrar detalle del libro seleccionado y permitir volver
+                    
                     BookDetailScreen(libro = selectedLibro!!) { selectedLibro = null }
                 }
                 libros.isEmpty() -> {

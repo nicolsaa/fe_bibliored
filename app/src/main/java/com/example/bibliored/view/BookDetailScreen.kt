@@ -8,13 +8,15 @@ import androidx.compose.ui.unit.dp
 import com.example.bibliored.model.Libro
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import com.example.bibliored.util.SelectedBookNav
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookDetailScreen(
     libro: Libro? = null,
-    onBack: (() -> Unit)? = null
+    onBack: (() -> Unit)? = null,
+    onDone: (() -> Unit)? = null
 ) {
     val libroData = libro ?: SelectedBookNav.currentLibro
     if (libroData == null) {
@@ -22,14 +24,16 @@ fun BookDetailScreen(
         return
     }
 
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(libroData.titulo) },
-                navigationIcon = if (onBack != null) {
-                    { IconButton(onClick = { onBack.invoke() }) { Icon(Icons.Filled.ArrowBack, contentDescription = "Back") } }
-                } else {
-                    { /* no back button */ }
+                navigationIcon = {
+                    IconButton(onClick = { onBack?.invoke() ?: backDispatcher?.onBackPressed() }) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    }
                 }
             )
         }
@@ -37,12 +41,12 @@ fun BookDetailScreen(
         Column(modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize()) {
             Portada(libro = libroData, modifier = Modifier.fillMaxWidth().height(240.dp))
             Spacer(Modifier.height(12.dp))
-            Text(libroData.titulo, style = MaterialTheme.typography.titleLarge)
+            Text(libroData.titulo, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
             Spacer(Modifier.height(4.dp))
             val autores = libroData.autores.joinToString { it.nombre }
-            Text(autores, style = MaterialTheme.typography.bodyMedium)
+            Text(autores, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onBackground)
             Spacer(Modifier.height(8.dp))
-            Text(libroData.descripcion ?: "", style = MaterialTheme.typography.bodyMedium)
+            Text(libroData.descripcion ?: "", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onBackground)
         }
     }
 }
