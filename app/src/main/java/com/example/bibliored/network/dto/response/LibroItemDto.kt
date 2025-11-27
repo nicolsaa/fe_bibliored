@@ -8,5 +8,7 @@ data class LibroItemDto(
     val authorNames: List<String>,
     val barCode: String?,
     val coverUrl: String?,
-    val descripcion: String?
+    val descripcion: String?,
+    val paraIntercambio: Boolean,
+    val paraRegalo: Boolean
 )

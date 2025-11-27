@@ -1,13 +1,13 @@
 package com.example.bibliored.api
 
-import androidx.compose.foundation.text2.input.rememberTextFieldState
+
 import com.example.bibliored.model.Usuario
 import kotlinx.coroutines.delay
 import com.example.bibliored.network.RetrofitProvider
 import com.example.bibliored.network.ApiConfig
 import com.example.bibliored.network.ConverterKind
 import com.example.bibliored.network.dto.RegistroUsuarioDto
-import com.example.bibliored.network.dto.RegistroUsuarioResponse
+
 import retrofit2.Response
 import java.io.IOException
 
@@ -60,6 +60,12 @@ class ApiAuthRepository(private val api: ApiService, private val cookieHeader: S
                 Result.failure(t)
             }
         }
+    }
+    
+    override suspend fun logout() {
+        // Por ahora, esta función no hará nada.
+        // La lógica real de cierre de sesión se implementará más adelante.
+        delay(0)
     }
 
     companion object {

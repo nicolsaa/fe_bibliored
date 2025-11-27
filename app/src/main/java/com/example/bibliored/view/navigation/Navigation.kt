@@ -1,6 +1,11 @@
 package com.example.bibliored.view.navigation
 
+
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
@@ -9,41 +14,31 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.bibliored.data.SessionPrefs
+import com.example.bibliored.model.Libro
+import com.example.bibliored.util.SelectedBookNav
+import com.example.bibliored.view.BibliotecaScreen
 import com.example.bibliored.view.BookDetailScreen
+import com.example.bibliored.view.ConversationScreen
 import com.example.bibliored.view.FormScreen
 import com.example.bibliored.view.HomeScreen
+import com.example.bibliored.view.MessagesScreen
+import com.example.bibliored.view.ProfileScreen
 import com.example.bibliored.view.SplashScreen
 import com.example.bibliored.view.add.AddBookScreen
 import com.example.bibliored.view.login.LoginScreen
-import com.example.bibliored.view.navigation.Routes.Home
-
-/*👉 Es el “mapa de rutas” de toda la app.
-Cada composable() dentro del NavHost representa una pantalla, y el NavController se encarga de moverse entre ellas (como si fueran páginas). 
-
-*/
-
-/*Este objeto simplemente centraliza los nombres de las rutas.
-Sirve para que no tengas strings duplicados y sea más fácil mantenerlas.
-
-"splash" → Pantalla inicial
-
-"login" → Pantalla de inicio de sesión
-
-"home/{nombre}" → Pantalla principal con un argumento (nombre)
-
-"add" → Pantalla para agregar/escanear libros
-
-FormScreen → pantalla para registrar un nuevo usuario*/
+import kotlinx.coroutines.launch
 
 object Routes {
-    const val Splash = "splash"
-    const val Login  = "login"
-    const val Home   = "home/{nombre}"
-    const val Add    = "add"
-    const val FormScreen = "formScreen"
-    const val BookDetail = "bookDetail"
-
-    const val AddBook = "addBook"
+    const val SPLASH = "splash"
+    const val LOGIN  = "login"
+    const val MAIN = "main/{nombre}"
+    const val ADD    = "add"
+    const val FORM_SCREEN = "formScreen"
+    const val BOOK_DETAIL = "bookDetail"
+    const val MESSAGES = "messages"
+    const val CONVERSATION = "conversation/{conversationId}?bookTitle={bookTitle}&coverUrl={coverUrl}"
+    const val PROFILE = "profile"
+    const val BIBLIOTECA = "biblioteca"
 }
 
 @Composable
@@ -51,108 +46,187 @@ fun AppNav(modifier: Modifier = Modifier) {
     val nav = rememberNavController()
     val ctx = LocalContext.current
     val sessionPrefs = SessionPrefs(ctx)
-
-    /*AppNav
-    - rememberNavController() crea el controlador de navegación.
-    Es lo que usas para moverte entre pantallas con nav.navigate("ruta"). 
-    - LocalContext.current obtiene el contexto actual de Android.
-    - SessionPrefs(ctx) inicializa la clase que maneja el DataStore de sesión.
-    (la usas para saber si el usuario está logeado).*/
+    val scope = rememberCoroutineScope()
 
     NavHost(
-        /*El NavHost contiene todas las pantallas (composable) que puedes visitar.
-        - startDestination define la pantalla inicial → en tu caso, el Splash.*/
         navController = nav,
-        startDestination = Routes.Splash,
+        startDestination = Routes.SPLASH,
         modifier = modifier
     ) {
-        /*Muestra la pantalla Splash al abrir la app.
-        Le pasa sessionPrefs para leer si hay una sesión guardada.
-        Si el usuario ya está logeado, navega directo a home/{nombre}.
-        Si no está logeado, va al login.*/
-        composable(Routes.Splash) {
+        composable(Routes.SPLASH) {
             SplashScreen(
                 sessionPrefs = sessionPrefs,
                 onGoHome = { nombre ->
-                    nav.navigate("home/$nombre") {
-                        popUpTo(Routes.Splash) { inclusive = true } /*popUpTo(... { inclusive = true }) borra la pantalla anterior del stack,
-                                                                    para que no puedas volver atrás con el botón de “atrás”.*/
+                    nav.navigate("main/$nombre") {
+                        popUpTo(Routes.SPLASH) { inclusive = true }
                     }
                 },
                 onGoLogin = {
-                    nav.navigate(Routes.Login) {
-                        popUpTo(Routes.Splash) { inclusive = true }
+                    nav.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.SPLASH) { inclusive = true }
                     }
                 }
             )
         }
 
-        composable(Routes.Login) {
-            /*Muestra el formulario de inicio de sesión.
-            Cuando el login es exitoso, llama a onLoggedIn(nombre) → navega al Home.
-            También limpia el back stack (ya no puedes volver al login).*/
+        composable(Routes.LOGIN) {
             LoginScreen(
                 onLoggedIn = { nombre ->
-                    // ✅ CORRECTO: Con parámetro
-                    nav.navigate("home/$nombre") {
-                        popUpTo(Routes.Login) { inclusive = true }
+                    nav.navigate("main/$nombre") {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 },
                 onNavigateToRegister = {
-                    nav.navigate(Routes.FormScreen)
+                    nav.navigate(Routes.FORM_SCREEN)
                 }
             )
         }
 
+        composable(Routes.FORM_SCREEN) {
+            FormScreen(onRegistered = { nombre ->
+                nav.navigate("main/$nombre") {
+                    popUpTo(Routes.LOGIN) { inclusive = true }
+                }
+            })
+        }
 
         composable(
-            route = Home,
+            route = Routes.MAIN,
             arguments = listOf(navArgument("nombre") { type = NavType.StringType })
         ) { backStackEntry ->
-            val nombre = backStackEntry.arguments?.getString("nombre") ?: "Usuario"
-            HomeScreen(
-                nombreCompleto = nombre,
-                sessionPrefs = sessionPrefs,
-                onLogout = {
-                    nav.navigate(Routes.Login) {
-                        popUpTo(Home) { inclusive = true }
+            val nombre = backStackEntry.arguments?.getString("nombre")
+            if (nombre != null) {
+                HomeScreen(
+                    nombreCompleto = nombre,
+                    sessionPrefs = sessionPrefs,
+                    onLogout = {
+                        scope.launch {
+                            sessionPrefs.clear()
+                        }
+                        nav.navigate(Routes.LOGIN) {
+                            popUpTo(nav.graph.id) {
+                                inclusive = true
+                            }
+                        }
+                    },
+                    onAddClick = { nav.navigate(Routes.ADD) },
+                    onBookContactClick = { _: Libro -> nav.navigate(Routes.MESSAGES) },
+                    onProfileClick = { nav.navigate(Routes.PROFILE) },
+                    onBibliotecaClick = { nav.navigate(Routes.BIBLIOTECA) },
+                    onMessagesClick = { nav.navigate(Routes.MESSAGES) }
+                )
+            }
+        }
+        composable(Routes.MESSAGES) {
+            val session by sessionPrefs.sessionFlow.collectAsState(initial = null)
+
+            session?.let { currentSession ->
+                if (currentSession.isLoggedIn) {
+                    val nombre = currentSession.userName
+                    MessagesScreen(
+                        onConversationClick = { conversationId ->
+                            nav.navigate("conversation/$conversationId")
+                        },
+                        onBack = {
+                            nav.popBackStack()
+                        },
+                        onHomeClick = { nav.navigate("main/$nombre") },
+                        onBibliotecaClick = { nav.navigate(Routes.BIBLIOTECA) },
+                        onMessagesClick = { nav.navigate(Routes.MESSAGES) },
+                        onProfileClick = { nav.navigate(Routes.PROFILE) }
+                    )
+                } else {
+                    LaunchedEffect(Unit) {
+                        nav.navigate(Routes.LOGIN) {
+                            popUpTo(nav.graph.id) { inclusive = true }
+                        }
                     }
+                }
+            }
+        }
+        composable(Routes.ADD) {
+            AddBookScreen(onDone = { nav.popBackStack() })
+        }
+        composable(
+            route = Routes.CONVERSATION,
+            arguments = listOf(
+                navArgument("conversationId") { type = NavType.StringType },
+                navArgument("bookTitle") { 
+                    type = NavType.StringType
+                    nullable = true 
+                    defaultValue = null
                 },
-                onAddClick = { nav.navigate(Routes.Add) }   // ⬅️ navega a Agregar/Escanear
-            )
-        }
-
-        /*Pantalla para agregar/escanear libros.
-        Cuando termina (onDone()), usa nav.popBackStack() para volver atrás al HomeScreen.*/
-        composable(Routes.Add) {
-            AddBookScreen(
-                onDone = { nav.popBackStack() },
-                openDetail = { libro ->
-                    com.example.bibliored.util.SelectedBookNav.currentLibro = libro
-                    nav.navigate(Routes.BookDetail)
+                navArgument("coverUrl") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
                 }
             )
+        ) { backStackEntry ->
+            ConversationScreen(
+                conversationId = backStackEntry.arguments?.getString("conversationId") ?: "",
+                bookTitle = backStackEntry.arguments?.getString("bookTitle"),
+                coverUrl = backStackEntry.arguments?.getString("coverUrl"),
+                onBack = { nav.popBackStack() }
+            )
         }
+        composable(Routes.PROFILE) {
+             val session by sessionPrefs.sessionFlow.collectAsState(initial = null)
 
-        /* Pantalla de registro de nuevo usuario */
-        composable(Routes.FormScreen) {
-            FormScreen(
-                onRegistered = { nombreCompleto ->
-                    nav.navigate("home/$nombreCompleto") {
-                        popUpTo(Routes.FormScreen) { inclusive = true }
+            session?.let { currentSession ->
+                if (currentSession.isLoggedIn) {
+                    val nombre = currentSession.userName
+                    ProfileScreen(
+                        onBack = { nav.popBackStack() },
+                        onLogout = {
+                            nav.navigate(Routes.LOGIN) {
+                                popUpTo(nav.graph.id) {
+                                    inclusive = true
+                                }
+                            }
+                        },
+                        onHomeClick = { nav.navigate("main/$nombre") },
+                        onBibliotecaClick = { nav.navigate(Routes.BIBLIOTECA) },
+                        onMessagesClick = { nav.navigate(Routes.MESSAGES) },
+                        onProfileClick = { nav.navigate(Routes.PROFILE) }
+                    )
+                } else {
+                    LaunchedEffect(Unit) {
+                        nav.navigate(Routes.LOGIN) {
+                            popUpTo(nav.graph.id) { inclusive = true }
+                        }
                     }
                 }
-            )
+            }
         }
+        composable(Routes.BIBLIOTECA) {
+            val session by sessionPrefs.sessionFlow.collectAsState(initial = null)
 
-        composable(Routes.BookDetail) {
-            BookDetailScreen(onBack = { com.example.bibliored.util.SelectedBookNav.currentLibro = null; nav.popBackStack() }, libro = null,
-                onDone = {nav.navigate(Home)})
+            session?.let { currentSession ->
+                if (currentSession.isLoggedIn) {
+                    val nombre = currentSession.userName
+                    BibliotecaScreen(
+                        onAddClick = { nav.navigate(Routes.ADD) },
+                        onHomeClick = { nav.navigate("main/$nombre") },
+                        onBibliotecaClick = { nav.navigate(Routes.BIBLIOTECA) },
+                        onMessagesClick = { nav.navigate(Routes.MESSAGES) },
+                        onProfileClick = { nav.navigate(Routes.PROFILE) },
+                        onLibroClick = { libro ->
+                            SelectedBookNav.currentLibro = libro
+                            nav.navigate(Routes.BOOK_DETAIL)
+                        }
+                    )
+                } else {
+                    LaunchedEffect(Unit) {
+                        nav.navigate(Routes.LOGIN) {
+                            popUpTo(nav.graph.id) { inclusive = true }
+                        }
+                    }
+                }
+            }
         }
-
-        composable(Routes.AddBook) {
-            AddBookScreen(onDone = { nav.navigate(Home) })
+        composable(Routes.BOOK_DETAIL) {
+            BookDetailScreen(onBack = { nav.popBackStack() })
         }
-
     }
 }

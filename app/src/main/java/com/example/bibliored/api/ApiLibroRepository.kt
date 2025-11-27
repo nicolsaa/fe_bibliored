@@ -34,7 +34,8 @@ class ApiLibroRepository(private val api: ApiService) : LibroRepository {
                             descripcion = item.descripcion,
                             portada = PortadaUrl(item.coverUrl, null, null),
                             workKey = null,
-                            editionKey = null
+                            editionKey = null,
+                            nombreUsuario = correo
                         )
                     }
                     Result.success(libros)
@@ -55,6 +56,43 @@ class ApiLibroRepository(private val api: ApiService) : LibroRepository {
             }
         }
     }
+
+    override suspend fun getLibros(): Result<List<Libro>> {
+        return try {
+            val httpResponse: Response<LibroUserResponseDto> = this.api.getBooks()
+
+            if (httpResponse.isSuccessful) {
+                val body = httpResponse.body()
+                if (body != null) {
+                    val librosRaw: List<LibroItemDto> = body.libros
+                    val libros = librosRaw.map { item ->
+                        Libro(
+                            isbn10 = null,
+                            isbn13 = item.barCode,
+                            titulo = item.title,
+                            autores = item.authorNames.map { Autor(nombre = it) },
+                            descripcion = item.descripcion,
+                            portada = PortadaUrl(item.coverUrl, null, null),
+                            workKey = null,
+                            editionKey = null,
+                            nombreUsuario = null, // No hay nombre de usuario en este endpoint
+                            paraIntercambio = item.paraIntercambio,
+                            paraRegalo = item.paraRegalo
+                        )
+                    }
+                    Result.success(libros)
+                } else {
+                    Result.success(emptyList())
+                }
+            } else {
+                val errorContent = httpResponse.errorBody()?.string()
+                Result.failure(IOException("error al obtener todos los libros: $errorContent"))
+            }
+        } catch (t: Throwable) {
+            Result.failure(t)
+        }
+    }
+
 
     companion object {
         fun default(): ApiLibroRepository {
