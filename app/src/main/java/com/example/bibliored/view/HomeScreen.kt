@@ -25,6 +25,12 @@ import com.example.bibliored.data.SessionPrefs
 import com.example.bibliored.model.Autor
 import com.example.bibliored.model.Libro
 import com.example.bibliored.model.PortadaUrl
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.foundation.background
+import com.example.bibliored.view.navigation.Routes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +39,7 @@ fun HomeScreen(
     sessionPrefs: SessionPrefs,
     onLogout: () -> Unit,
     onAddClick: () -> Unit,
-    onBookContactClick: (Libro) -> Unit,
+    onBookContactClick: (Libro, String) -> Unit, // Cambiado para incluir userId
     onProfileClick: () -> Unit,
     onBibliotecaClick: () -> Unit,
     onMessagesClick: () -> Unit
@@ -55,7 +61,8 @@ fun HomeScreen(
             ),
             workKey = "/works/OL45804W",
             editionKey = "/books/OL26336839M",
-            nombreUsuario = "Juan Perez"
+            nombreUsuario = "Juan Perez",
+            userId = "user123" // Añadir userId
         ),
         Libro(
             isbn10 = "0987654321",
@@ -70,7 +77,8 @@ fun HomeScreen(
             ),
             workKey = "/works/OL45883W",
             editionKey = "/books/OL24351648M",
-            nombreUsuario = "Maria Rodriguez"
+            nombreUsuario = "Maria Rodriguez",
+            userId = "user456" // Añadir userId
         ),
         Libro(
             isbn10 = null,
@@ -81,18 +89,26 @@ fun HomeScreen(
             portada = null,
             workKey = null,
             editionKey = null,
-            nombreUsuario = "Pedro Pascal"
+            nombreUsuario = "Pedro Pascal",
+            userId = "user789" // Añadir userId
         )
     )
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Bienvenido, $nombreCompleto 👋") }
+                title = {
+                    Text(
+                        "Bienvenido, $nombreCompleto 👋",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             )
         },
         bottomBar = {
             BottomNavigationBar(
+                currentRoute = Routes.MAIN,
                 onHomeClick = { /* Ya estás en Home */ },
                 onBibliotecaClick = onBibliotecaClick,
                 onMessagesClick = onMessagesClick,
@@ -100,7 +116,17 @@ fun HomeScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddClick) { Text("+") }
+            FloatingActionButton(
+                onClick = onAddClick,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Agregar libro",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     ) { padding ->
         BookFeed(
@@ -114,56 +140,21 @@ fun HomeScreen(
 }
 
 @Composable
-fun BottomNavigationBar(
-    onHomeClick: () -> Unit,
-    onBibliotecaClick: () -> Unit,
-    onMessagesClick: () -> Unit,
-    onProfileClick: () -> Unit
-) {
-    NavigationBar {
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-            label = { Text("Home") },
-            selected = true, // Siempre seleccionado en la pantalla de inicio
-            onClick = onHomeClick
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Book, contentDescription = "Biblioteca") },
-            label = { Text("Biblioteca") },
-            selected = false,
-            onClick = onBibliotecaClick
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Message, contentDescription = "Messages") },
-            label = { Text("Mensajes") },
-            selected = false,
-            onClick = onMessagesClick
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-            label = { Text("Perfil") },
-            selected = false,
-            onClick = onProfileClick
-        )
-    }
-}
-
-
-@Composable
 private fun BookFeed(
     libros: List<Libro>,
-    onContactClick: (Libro) -> Unit,
+    onContactClick: (Libro, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
         modifier = modifier,
-        contentPadding = PaddingValues(vertical = 8.dp)
+        contentPadding = PaddingValues(vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(libros) { libro ->
             BookPostItem(
                 libro = libro,
                 onContactClick = onContactClick,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                modifier = Modifier.padding(horizontal = 8.dp)
             )
         }
     }
@@ -172,7 +163,7 @@ private fun BookFeed(
 @Composable
 private fun BookPostItem(
     libro: Libro,
-    onContactClick: (Libro) -> Unit,
+    onContactClick: (Libro, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var isLiked by remember { mutableStateOf(false) }
@@ -180,60 +171,184 @@ private fun BookPostItem(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(4.dp)
+        elevation = CardDefaults.cardElevation(4.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column {
+            // Header estilo Instagram con usuario
+            UserHeader(
+                userName = libro.nombreUsuario ?: "Usuario",
+                userAvatar = null, // Puedes añadir avatar si lo tienes
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+            )
+
+            // Portada del libro
             Portada(
                 libro = libro,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(300.dp)
+                    .height(400.dp)
             )
-            Column(Modifier.padding(16.dp)) {
-                Text(libro.titulo, style = MaterialTheme.typography.titleLarge)
-                Text(libro.autores.joinToString { it.nombre }, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-                libro.nombreUsuario?.let {
-                    Text(
-                        text = "Publicado por: $it",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
 
-                Spacer(Modifier.height(16.dp))
+            // Acciones (like, contactar)
+            PostActions(
+                isLiked = isLiked,
+                onLikeClick = { isLiked = !isLiked },
+                onContactClick = {
+                    libro.userId?.let { userId ->
+                        onContactClick(libro, userId)
+                    }
+                },
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+            )
 
-                Column(
-                    modifier = Modifier
-                        .animateContentSize()
-                        .clickable { isExpanded = !isExpanded }
-                ) {
-                    Text(
-                        text = libro.descripcion ?: "No hay descripción disponible.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        maxLines = if (isExpanded) Int.MAX_VALUE else 3,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+            // Información del libro
+            BookInfo(
+                libro = libro,
+                isExpanded = isExpanded,
+                onExpandClick = { isExpanded = !isExpanded },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
+    }
+}
 
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    IconButton(onClick = { isLiked = !isLiked }) {
-                        Icon(
-                            imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                            contentDescription = "Like",
-                            tint = if (isLiked) MaterialTheme.colorScheme.primary else Color.Gray
+@Composable
+private fun UserHeader(
+    userName: String,
+    userAvatar: String?,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Avatar del usuario
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.primaryContainer
                         )
-                    }
-                    Button(onClick = { onContactClick(libro) }) {
-                        Text("Contactar")
-                    }
-                }
+                    )
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = userName.take(1).uppercase(),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Text(
+            text = userName,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+private fun PostActions(
+    isLiked: Boolean,
+    onLikeClick: () -> Unit,
+    onContactClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = onLikeClick,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                    contentDescription = "Like",
+                    tint = if (isLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        Button(
+            onClick = onContactClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ),
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Message,
+                contentDescription = "Contactar",
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Contactar")
+        }
+    }
+}
+
+@Composable
+private fun BookInfo(
+    libro: Libro,
+    isExpanded: Boolean,
+    onExpandClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        // Título y autor
+        Text(
+            text = libro.titulo,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Text(
+            text = libro.autores.joinToString { it.nombre },
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Descripción expandible
+        Column(
+            modifier = Modifier
+                .animateContentSize()
+                .clickable { onExpandClick() }
+        ) {
+            Text(
+                text = libro.descripcion ?: "No hay descripción disponible.",
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = if (isExpanded) Int.MAX_VALUE else 3,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            if (!isExpanded && (libro.descripcion?.length ?: 0) > 150) {
+                Text(
+                    text = "Ver más",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
     }

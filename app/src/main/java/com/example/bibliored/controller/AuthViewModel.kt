@@ -48,11 +48,14 @@ class AuthViewModel(
             _estado.value = LoginState.Loading
             val res = repo.login(correo, contrasena)
             _estado.value = res.fold(
-                onSuccess = { sessionPrefs.setLoggedIn(
-                    0L,
-                    it.nombre,
-                    it.correo)
-                    LoginState.Success(it) },
+                onSuccess = {
+                    sessionPrefs.setLoggedIn(
+                        it.id.toString(),
+                        it.nombre,
+                        it.correo
+                    )
+                    LoginState.Success(it)
+                },
                 onFailure = { LoginState.Error("Usuario no válido") }
             )
         }

@@ -59,7 +59,7 @@ fun LoginScreen(
         if (estado is LoginState.Success) {
             val user = estado.usuario
             val nombre = "${user.nombre} ${user.apellido}".trim()
-            sessionPrefs.setLoggedIn(user.id, nombre, user.correo)
+            sessionPrefs.setLoggedIn("user_${System.currentTimeMillis()}", nombre, correo)
             onLoggedIn(nombre)
         }
     }

@@ -1,10 +1,12 @@
 package com.example.bibliored.model.messages
 
+// Conversation.kt - Añade los nuevos campos
 data class Conversation(
     val id: String,
     val participants: List<String>,
+    val participantIds: List<String>, // Nuevo campo
     val lastMessage: String,
-    val timestamp: Long, // Añadir timestamp
-    val unreadCount: Int = 0, // Añadir contador de no leídos
-    val participantIds: List<String> // Para los avatars
+    val timestamp: Long,
+    val unreadCount: Int = 0, // Nuevo campo
+    val bookInfo: BookInfo? = null // Nuevo campo
 )

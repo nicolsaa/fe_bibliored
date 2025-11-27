@@ -13,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bibliored.controller.messages.MessagesViewModel
 import com.example.bibliored.model.messages.Message
 import androidx.compose.ui.layout.ContentScale
@@ -35,9 +34,10 @@ fun ConversationScreen(
     conversationId: String,
     bookTitle: String?,
     coverUrl: String?,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    isNewChat: Boolean = false,
+    viewModel: MessagesViewModel
 ) {
-    val viewModel: MessagesViewModel = viewModel()
     val messages by viewModel.messages.collectAsState()
     val currentUserName by viewModel.currentUserName.collectAsState()
     var newMessage by remember { mutableStateOf("") }
@@ -50,7 +50,7 @@ fun ConversationScreen(
     // Auto-scroll al enviar mensaje
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
-            scrollState.animateScrollToItem(messages.size - 1)
+            scrollState.animateScrollToItem(0)
         }
     }
 
@@ -68,7 +68,10 @@ fun ConversationScreen(
                 onMessageChange = { newMessage = it },
                 onSendMessage = {
                     if (newMessage.isNotBlank()) {
-                        viewModel.sendMessage(conversationId, newMessage)
+                        viewModel.sendMessage(
+                            conversationId = conversationId,
+                            content = newMessage
+                        )
                         newMessage = ""
                     }
                 }
@@ -88,17 +91,6 @@ fun ConversationScreen(
                     messages = messages,
                     currentUserName = currentUserName,
                     scrollState = scrollState
-                )
-            }
-
-            // Header del libro flotante
-            if (bookTitle != null) {
-                FloatingBookInfo(
-                    title = bookTitle,
-                    coverUrl = coverUrl,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 8.dp)
                 )
             }
         }
@@ -370,45 +362,6 @@ fun MessageInputBar(
                     modifier = Modifier.size(20.dp)
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun FloatingBookInfo(
-    title: String,
-    coverUrl: String?,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (coverUrl != null) {
-                AsyncImage(
-                    model = coverUrl,
-                    contentDescription = "Portada del libro",
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-            }
-            Text(
-                text = "Intercambiando: $title",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
         }
     }
 }

@@ -15,8 +15,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.bibliored.controller.ProfileViewModel
 import com.example.bibliored.controller.ProfileViewModelFactory
+import com.example.bibliored.controller.messages.MessagesViewModel
 import com.example.bibliored.data.SessionPrefs
-import com.example.bibliored.model.Libro
 import com.example.bibliored.util.SelectedBookNav
 import com.example.bibliored.view.AddressScreen
 import com.example.bibliored.view.BibliotecaScreen
@@ -39,7 +39,7 @@ object Routes {
     const val FORM_SCREEN = "formScreen"
     const val BOOK_DETAIL = "bookDetail"
     const val MESSAGES = "messages"
-    const val CONVERSATION = "conversation/{conversationId}?bookTitle={bookTitle}&coverUrl={coverUrl}"
+    const val CONVERSATION = "conversation/{conversationId}?bookTitle={bookTitle}&coverUrl={coverUrl}&isNewChat={isNewChat}"
     const val PROFILE = "profile"
     const val BIBLIOTECA = "biblioteca"
     const val ADDRESS = "address" // Nueva ruta
@@ -52,8 +52,9 @@ fun AppNav(modifier: Modifier = Modifier) {
     val sessionPrefs = SessionPrefs(ctx)
     val scope = rememberCoroutineScope()
 
-    // ViewModel compartido
+    // ViewModels compartidos
     val profileViewModel: ProfileViewModel = viewModel(factory = ProfileViewModelFactory(ctx))
+    val messagesViewModel: MessagesViewModel = viewModel()
 
     NavHost(
         navController = nav,
@@ -97,33 +98,6 @@ fun AppNav(modifier: Modifier = Modifier) {
             })
         }
 
-        composable(
-            route = Routes.MAIN,
-            arguments = listOf(navArgument("nombre") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val nombre = backStackEntry.arguments?.getString("nombre")
-            if (nombre != null) {
-                HomeScreen(
-                    nombreCompleto = nombre,
-                    sessionPrefs = sessionPrefs,
-                    onLogout = {
-                        scope.launch {
-                            sessionPrefs.clear()
-                        }
-                        nav.navigate(Routes.LOGIN) {
-                            popUpTo(nav.graph.id) {
-                                inclusive = true
-                            }
-                        }
-                    },
-                    onAddClick = { nav.navigate(Routes.ADD) },
-                    onBookContactClick = { _: Libro -> nav.navigate(Routes.MESSAGES) },
-                    onProfileClick = { nav.navigate(Routes.PROFILE) },
-                    onBibliotecaClick = { nav.navigate(Routes.BIBLIOTECA) },
-                    onMessagesClick = { nav.navigate(Routes.MESSAGES) }
-                )
-            }
-        }
         composable(Routes.MESSAGES) {
             val session by sessionPrefs.sessionFlow.collectAsState(initial = null)
 
@@ -131,11 +105,14 @@ fun AppNav(modifier: Modifier = Modifier) {
                 if (currentSession.isLoggedIn) {
                     val nombre = currentSession.userName
                     MessagesScreen(
+                        viewModel = messagesViewModel,
                         onConversationClick = { conversationId ->
-                            nav.navigate("conversation/$conversationId")
+                            nav.navigate("conversation/$conversationId?isNewChat=false")
                         },
                         onBack = {
-                            nav.popBackStack()
+                            nav.navigate("main/$nombre") {
+                                popUpTo(Routes.MESSAGES) { inclusive = true }
+                            }
                         },
                         onHomeClick = { nav.navigate("main/$nombre") },
                         onBibliotecaClick = { nav.navigate(Routes.BIBLIOTECA) },
@@ -158,23 +135,40 @@ fun AppNav(modifier: Modifier = Modifier) {
             route = Routes.CONVERSATION,
             arguments = listOf(
                 navArgument("conversationId") { type = NavType.StringType },
-                navArgument("bookTitle") { 
+                navArgument("bookTitle") {
                     type = NavType.StringType
-                    nullable = true 
+                    nullable = true
                     defaultValue = null
                 },
                 navArgument("coverUrl") {
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
+                },
+                navArgument("isNewChat") {
+                    type = NavType.BoolType
+                    defaultValue = false
                 }
             )
         ) { backStackEntry ->
+            val isNewChat = backStackEntry.arguments?.getBoolean("isNewChat") ?: false
             ConversationScreen(
+                viewModel = messagesViewModel,
                 conversationId = backStackEntry.arguments?.getString("conversationId") ?: "",
                 bookTitle = backStackEntry.arguments?.getString("bookTitle"),
                 coverUrl = backStackEntry.arguments?.getString("coverUrl"),
-                onBack = { nav.popBackStack() }
+                isNewChat = isNewChat,
+                onBack = {
+                    if (isNewChat) {
+                        nav.navigate(Routes.MESSAGES) {
+                            popUpTo(backStackEntry.destination.id) {
+                                inclusive = true
+                            }
+                        }
+                    } else {
+                        nav.popBackStack()
+                    }
+                }
             )
         }
         composable(Routes.PROFILE) {
@@ -244,5 +238,48 @@ fun AppNav(modifier: Modifier = Modifier) {
                 onBack = { nav.popBackStack() }
             )
         }
+
+        composable(
+            route = Routes.MAIN,
+            arguments = listOf(navArgument("nombre") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val nombre = backStackEntry.arguments?.getString("nombre")
+
+            if (nombre != null) {
+                HomeScreen(
+                    nombreCompleto = nombre,
+                    sessionPrefs = sessionPrefs,
+                    onLogout = {
+                        scope.launch {
+                            sessionPrefs.clear()
+                        }
+                        nav.navigate(Routes.LOGIN) {
+                            popUpTo(nav.graph.id) {
+                                inclusive = true
+                            }
+                        }
+                    },
+                    onAddClick = { nav.navigate(Routes.ADD) },
+                    onBookContactClick = { libro, userId ->
+                        scope.launch {
+                            val currentSession = sessionPrefs.getCurrentSession()
+                            currentSession?.let {
+                                val conversationId = messagesViewModel.createConversationFromBook(
+                                    otherUserId = userId,
+                                    otherUserName = libro.nombreUsuario ?: "Usuario",
+                                    bookTitle = libro.titulo,
+                                    coverUrl = libro.portada?.medium
+                                )
+                                nav.navigate("conversation/$conversationId?bookTitle=${libro.titulo}&coverUrl=${libro.portada?.medium}&isNewChat=true")
+                            }
+                        }
+                    },
+                    onProfileClick = { nav.navigate(Routes.PROFILE) },
+                    onBibliotecaClick = { nav.navigate(Routes.BIBLIOTECA) },
+                    onMessagesClick = { nav.navigate(Routes.MESSAGES) }
+                )
+            }
+        }
     }
+
 }
