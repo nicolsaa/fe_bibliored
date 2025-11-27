@@ -7,8 +7,8 @@ class MessagesRepository {
 
     fun getConversations(): List<Conversation> {
         return listOf(
-            Conversation("1", listOf("Usuario1", "Usuario2"), "Hola! ¿Cómo estás?"),
-            Conversation("2", listOf("Usuario1", "Usuario3"), "Nos vemos mañana.")
+            Conversation("1", listOf("Usuario1", "Usuario2"), "Hola! ¿Cómo estás?", System.currentTimeMillis() - 10000, 1, listOf("Usuario1", "Usuario2")),
+            Conversation("2", listOf("Usuario1", "Usuario3"), "Nos vemos mañana.", System.currentTimeMillis() - 8000, 0, listOf("Usuario1", "Usuario3"))
         )
     }
 
