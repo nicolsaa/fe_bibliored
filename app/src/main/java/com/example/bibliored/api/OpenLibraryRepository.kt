@@ -10,12 +10,10 @@ import com.example.bibliored.network.ConverterKind
 import com.example.bibliored.network.dto.KeyRef
 import com.example.bibliored.network.dto.OpenLibraryEditionDto
 import com.example.bibliored.network.dto.descriptionTextOrNull
-import com.example.bibliored.network.dto.response.LibroResponseDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import com.example.bibliored.util.NetworkDiagnostics
-import kotlin.streams.toList
 
 class OpenLibraryRepository(
     private val openLibraryService: OpenLibraryService,
@@ -46,8 +44,8 @@ suspend fun getLibroByIsbn(
             val body = libroResponseDto.body()
                 ?: throw IllegalStateException("no book present in response body")
 
-            val autoresApi = body.autores.stream().map { autor -> Autor(autor.id, autor.nombre) }
-                .toList()
+            val autoresApi = body.autores.map { autor -> Autor(autor.id, autor.nombre) }
+
             val coverId= dto.covers?.get(0)
 
             val libro = Libro(
@@ -58,7 +56,8 @@ suspend fun getLibroByIsbn(
                 descripcion = dto.description?.toString(),
                 portada = buildPortada(coverId, isbn),
                 workKey = "",
-                editionKey = ""
+                editionKey = "",
+                nombreUsuario = correo
                 )
 
             libro
@@ -132,7 +131,8 @@ suspend fun getLibroByIsbn(
             descripcion = description.descriptionTextOrNull(),
             portada = portada,
             workKey = works?.firstOrNull()?.key,
-            editionKey = key
+            editionKey = key,
+            nombreUsuario = null
         )
     }
 

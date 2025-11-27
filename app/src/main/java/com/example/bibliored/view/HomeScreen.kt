@@ -1,36 +1,30 @@
 package com.example.bibliored.view
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.LibraryBooks
-import androidx.compose.material.icons.outlined.Logout
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Message
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.bibliored.controller.LibraryViewModel
-import com.example.bibliored.controller.LibroViewModel
 import com.example.bibliored.data.SessionPrefs
+import com.example.bibliored.model.Autor
 import com.example.bibliored.model.Libro
-import com.example.bibliored.view.BookDetailScreen
-import com.example.bibliored.view.Portada
-import kotlinx.coroutines.launch
-import java.util.Collections
-
-/*Esta Composable representa la pantalla principal del usuario logueado.
-nombreCompleto: el nombre del usuario, para mostrar el saludo.
-sessionPrefs: acceso al DataStore (para borrar sesión).
-onLogout: callback que se ejecuta cuando se presiona “Salir”.
-onAddClick: callback para navegar a la pantalla de Agregar / Escanear libro.
-vm: tu LibraryViewModel, que expone los libros cargados (vm.libros).*/
+import com.example.bibliored.model.PortadaUrl
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,147 +32,208 @@ fun HomeScreen(
     nombreCompleto: String,
     sessionPrefs: SessionPrefs,
     onLogout: () -> Unit,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
+    onBookContactClick: (Libro) -> Unit,
+    onProfileClick: () -> Unit,
+    onBibliotecaClick: () -> Unit,
+    onMessagesClick: () -> Unit
 ) {
     val ctx = LocalContext.current
     val sessionPrefs = remember(ctx) { SessionPrefs(ctx) }
-    val vm = remember { LibraryViewModel(sessionPrefs = sessionPrefs) }
 
-val scope = rememberCoroutineScope() // scope: para lanzar corrutinas (usado al cerrar sesión).
-val libros by vm.libros.collectAsStateWithLifecycle()
-LaunchedEffect(libros) { if (libros.isEmpty()) vm.getLibros() }
-var selectedTab by remember { mutableStateOf(0) } /*selectedTab: controla qué pestaña está activa en el navbar inferior.
-                                                               (por ahora, solo hay una pestaña: “Biblioteca”).*/
-    var selectedLibro by remember { mutableStateOf<Libro?>(null) } // libro actualmente seleccionado para ver detalle
-
-    /*Scaffold es el contenedor principal que organiza:
-    topBar → barra superior (saludo).
-    bottomBar → barra inferior (nav).
-    floatingActionButton → botón flotante “+”.
-    El contenido (entre { padding -> ... }).*/
+    val mockLibros = listOf(
+        Libro(
+            isbn10 = "1234567890",
+            isbn13 = "1234567890123",
+            titulo = "El Señor de los Anillos",
+            autores = listOf(Autor(nombre = "J.R.R. Tolkien")),
+            descripcion = "Una gran aventura en la Tierra Media que narra el viaje del hobbit Frodo Bolsón para destruir el Anillo Único y derrotar al Señor Oscuro, Sauron. Acompañado por una comunidad diversa de hobbits, elfos, enanos y hombres, Frodo debe atravesar peligrosas tierras y enfrentarse a sus miedos más profundos.",
+            portada = PortadaUrl(
+                small = "https://covers.openlibrary.org/b/id/10308969-S.jpg",
+                medium = "https://covers.openlibrary.org/b/id/10308969-M.jpg",
+                large = "https://covers.openlibrary.org/b/id/10308969-L.jpg"
+            ),
+            workKey = "/works/OL45804W",
+            editionKey = "/books/OL26336839M",
+            nombreUsuario = "Juan Perez"
+        ),
+        Libro(
+            isbn10 = "0987654321",
+            isbn13 = "0987654321098",
+            titulo = "Cien Años de Soledad",
+            autores = listOf(Autor(nombre = "Gabriel García Márquez")),
+            descripcion = "La novela narra la historia de la familia Buendía a lo largo de siete generaciones en el pueblo ficticio de Macondo. Considerada una obra maestra de la literatura hispanoamericana y universal, es una de las obras más traducidas y leídas en español.",
+            portada = PortadaUrl(
+                small = "https://covers.openlibrary.org/b/id/8264768-S.jpg",
+                medium = "https://covers.openlibrary.org/b/id/8264768-M.jpg",
+                large = "https://covers.openlibrary.org/b/id/8264768-L.jpg"
+            ),
+            workKey = "/works/OL45883W",
+            editionKey = "/books/OL24351648M",
+            nombreUsuario = "Maria Rodriguez"
+        ),
+        Libro(
+            isbn10 = null,
+            isbn13 = null,
+            titulo = "Libro sin Portada",
+            autores = listOf(Autor(nombre = "Autor Anónimo")),
+            descripcion = "Un libro misterioso sin portada y con una descripción muy breve.",
+            portada = null,
+            workKey = null,
+            editionKey = null,
+            nombreUsuario = "Pedro Pascal"
+        )
+    )
 
     Scaffold(
-        topBar = { //Muestra el saludo centrado con el nombre del usuario (viene desde Navigation.kt al logearse).
+        topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Bienvenido, $nombreCompleto 👋") }
             )
         },
-        floatingActionButton = { /* Muestra el botón flotante con el texto “+”.
-                                    Cuando el usuario lo presiona, se llama onAddClick() → la app navega a la pantalla “Agregar libro”.*/
-            FloatingActionButton(onClick = onAddClick) { Text("+") }
-        },
         bottomBar = {
-            NavigationBar { /*Primer botón → “Biblioteca”: activa la pestaña principal.
-                            Segundo botón → “Salir”: limpia la sesión en DataStore y llama onLogout() (vuelve al login).
-                            Se usa scope.launch { ... } porque sessionPrefs.clear() es una función suspendida (usa corrutina).*/
-                NavigationBarItem(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    icon = { Icon(Icons.Outlined.LibraryBooks, contentDescription = "Biblioteca") },
-                    label = { Text("Biblioteca") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = {
-                        scope.launch {
-                            sessionPrefs.clear()
-                            onLogout()
-                        }
-                    },
-                    icon = { Icon(Icons.Outlined.Logout, contentDescription = "Cerrar sesión") },
-                    label = { Text("Salir") }
-                )
-            }
+            BottomNavigationBar(
+                onHomeClick = { /* Ya estás en Home */ },
+                onBibliotecaClick = onBibliotecaClick,
+                onMessagesClick = onMessagesClick,
+                onProfileClick = onProfileClick
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = onAddClick) { Text("+") }
         }
     ) { padding ->
-        // Contenido principal
-        if (selectedTab == 0) {
-            when {
-                selectedLibro != null -> {
-                    
-                    BookDetailScreen(libro = selectedLibro!!) { selectedLibro = null }
-                }
-                libros.isEmpty() -> {
-                    EmptyLibrary( // Si la lista está vacía → muestra EmptyLibrary().
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding),
-                        onAddClick = onAddClick
-                    )
-                }
-                else -> {
-                    LibraryGrid(
-                        libros = libros,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding)
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        onLibroClick = { libro -> selectedLibro = libro }
-                    )
-                }
-            }
-        }
+        BookFeed(
+            libros = mockLibros,
+            onContactClick = onBookContactClick,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        )
     }
 }
 
 @Composable
-private fun EmptyLibrary( //Muestra un mensaje centrado y un botón para ir a la pantalla de agregar libros.
-    modifier: Modifier = Modifier,
-    onAddClick: () -> Unit
+fun BottomNavigationBar(
+    onHomeClick: () -> Unit,
+    onBibliotecaClick: () -> Unit,
+    onMessagesClick: () -> Unit,
+    onProfileClick: () -> Unit
 ) {
-    Box(modifier, contentAlignment = Alignment.Center) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text("Aún no tienes libros en tu biblioteca")
-            Button(onClick = onAddClick) {
-                Text("Agregar / Escanear libro")
-            }
-        }
+    NavigationBar {
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+            label = { Text("Home") },
+            selected = true, // Siempre seleccionado en la pantalla de inicio
+            onClick = onHomeClick
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Book, contentDescription = "Biblioteca") },
+            label = { Text("Biblioteca") },
+            selected = false,
+            onClick = onBibliotecaClick
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Message, contentDescription = "Messages") },
+            label = { Text("Mensajes") },
+            selected = false,
+            onClick = onMessagesClick
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+            label = { Text("Perfil") },
+            selected = false,
+            onClick = onProfileClick
+        )
     }
 }
 
+
 @Composable
-private fun LibraryGrid(
+private fun BookFeed(
     libros: List<Libro>,
-    modifier: Modifier = Modifier,
-    onLibroClick: (Libro) -> Unit
+    onContactClick: (Libro) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(8.dp),
-        modifier = modifier
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(vertical = 8.dp)
     ) {
         items(libros) { libro ->
-            Card(Modifier.padding(8.dp).fillMaxWidth().clickable { onLibroClick(libro) }) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(8.dp)) {
-                    Portada(libro = libro, modifier = Modifier.size(120.dp))
-                    Spacer(Modifier.height(6.dp))
-                    Text(libro.titulo, maxLines = 2, style = MaterialTheme.typography.bodyMedium)
-                }
-            }
+            BookPostItem(
+                libro = libro,
+                onContactClick = onContactClick,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
         }
     }
 }
 
 @Composable
-private fun LibraryItem(libro: Libro) {
-    /*Cada libro se muestra como una tarjeta (Card) con:
-    - La portada (usando tu componente Portada),
-    - El título del libro,
-    - Y la lista de autores (si no tiene, muestra “Autor desconocido”).*/
-    Card(Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Portada(libro = libro, modifier = Modifier.size(72.dp))
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(libro.titulo, style = MaterialTheme.typography.titleMedium)
-                val autores = libro.autores.joinToString { it.nombre }
-                Text(
-                    if (autores.isBlank()) "Autor desconocido" else autores,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+private fun BookPostItem(
+    libro: Libro,
+    onContactClick: (Libro) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isLiked by remember { mutableStateOf(false) }
+    var isExpanded by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column {
+            Portada(
+                libro = libro,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+            )
+            Column(Modifier.padding(16.dp)) {
+                Text(libro.titulo, style = MaterialTheme.typography.titleLarge)
+                Text(libro.autores.joinToString { it.nombre }, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                libro.nombreUsuario?.let {
+                    Text(
+                        text = "Publicado por: $it",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                Column(
+                    modifier = Modifier
+                        .animateContentSize()
+                        .clickable { isExpanded = !isExpanded }
+                ) {
+                    Text(
+                        text = libro.descripcion ?: "No hay descripción disponible.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = if (isExpanded) Int.MAX_VALUE else 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    IconButton(onClick = { isLiked = !isLiked }) {
+                        Icon(
+                            imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                            contentDescription = "Like",
+                            tint = if (isLiked) MaterialTheme.colorScheme.primary else Color.Gray
+                        )
+                    }
+                    Button(onClick = { onContactClick(libro) }) {
+                        Text("Contactar")
+                    }
+                }
             }
         }
     }

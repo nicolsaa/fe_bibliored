@@ -5,4 +5,7 @@ import com.example.bibliored.model.Libro
 interface LibroRepository {
 
     suspend fun getLibroPorCorreo(correo: String): Result<List<Libro>>
+
+    suspend fun getLibros(): Result<List<Libro>>
+
 }

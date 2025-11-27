@@ -9,5 +9,8 @@ data class Libro(
     val descripcion: String?,     // Descripción o resumen del libro
     val portada: PortadaUrl?,     // URLs de las imágenes de portada
     val workKey: String?,         // Key del "work" (obra principal)
-    val editionKey: String?       // Key específica de la edición (/books/OL...)
+    val editionKey: String?,       // Key específica de la edición (/books/OL...)
+    val nombreUsuario: String?,
+    val paraIntercambio: Boolean = false,
+    val paraRegalo: Boolean = false
 )
