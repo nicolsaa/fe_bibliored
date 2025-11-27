@@ -20,4 +20,7 @@ interface ApiService {
 
     @GET("/libros/email/{correo}")
     suspend fun getBookByEmail(@Path("correo") correo: String): Response<LibroUserResponseDto>
+
+    @GET("/libros")
+    suspend fun getBooks(): Response<LibroUserResponseDto>
 }

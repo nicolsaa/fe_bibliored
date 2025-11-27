@@ -44,6 +44,9 @@ fun AddBookScreen(
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var guardado by remember { mutableStateOf(false) }
+    var paraIntercambio by remember { mutableStateOf(false) }
+    var paraRegalo by remember { mutableStateOf(false) }
+
     val _estado: MutableStateFlow<LoginState> = MutableStateFlow(LoginState.Idle)
     val estado: StateFlow<LoginState> = _estado.asStateFlow()
     val ctx = LocalContext.current
@@ -60,7 +63,8 @@ fun AddBookScreen(
                 is UiState.Ok -> {
                     loading = false
                     libroPreview = state.libro
-                    guardado = true
+                    // We don't save automatically anymore
+                    // guardado = true 
                 }
                 is UiState.Error -> {
                     loading = false
@@ -141,8 +145,36 @@ fun AddBookScreen(
 
                 Spacer(Modifier.height(8.dp))
 
-                Button(onClick = { onDone() }) {
-                    Text("volver a la biblioteca")
+                // Checkboxes for exchange and gift
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = paraIntercambio,
+                        onCheckedChange = { paraIntercambio = it }
+                    )
+                    Text("Apto para intercambio")
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = paraRegalo,
+                        onCheckedChange = { paraRegalo = it }
+                    )
+                    Text("Apto para regalo")
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                Button(onClick = {
+                    val libroActualizado = libro.copy(
+                        paraIntercambio = paraIntercambio,
+                        paraRegalo = paraRegalo
+                    )
+                    scope.launch {
+                        libraryVm.add(libroActualizado)
+                        guardado = true
+                    }
+                    onDone()
+                }) {
+                    Text("Guardar libro")
                 }
             }
 
@@ -156,7 +188,7 @@ fun AddBookScreen(
                 Text("Libro agregado a la biblioteca", color = MaterialTheme.colorScheme.primary)
             }
 
-            OutlinedButton(onClick = onDone) { Text("Cancelar") }
+            OutlinedButton(onClick = onDone) { Text("Volver atrás") }
         }
     }
 }
