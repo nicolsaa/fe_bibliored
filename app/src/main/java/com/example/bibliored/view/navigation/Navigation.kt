@@ -1,6 +1,5 @@
 package com.example.bibliored.view.navigation
 
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -8,14 +7,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.bibliored.controller.ProfileViewModel
+import com.example.bibliored.controller.ProfileViewModelFactory
 import com.example.bibliored.data.SessionPrefs
 import com.example.bibliored.model.Libro
 import com.example.bibliored.util.SelectedBookNav
+import com.example.bibliored.view.AddressScreen
 import com.example.bibliored.view.BibliotecaScreen
 import com.example.bibliored.view.BookDetailScreen
 import com.example.bibliored.view.ConversationScreen
@@ -39,6 +42,7 @@ object Routes {
     const val CONVERSATION = "conversation/{conversationId}?bookTitle={bookTitle}&coverUrl={coverUrl}"
     const val PROFILE = "profile"
     const val BIBLIOTECA = "biblioteca"
+    const val ADDRESS = "address" // Nueva ruta
 }
 
 @Composable
@@ -47,6 +51,9 @@ fun AppNav(modifier: Modifier = Modifier) {
     val ctx = LocalContext.current
     val sessionPrefs = SessionPrefs(ctx)
     val scope = rememberCoroutineScope()
+
+    // ViewModel compartido
+    val profileViewModel: ProfileViewModel = viewModel(factory = ProfileViewModelFactory(ctx))
 
     NavHost(
         navController = nav,
@@ -185,10 +192,12 @@ fun AppNav(modifier: Modifier = Modifier) {
                                 }
                             }
                         },
+                        viewModel = profileViewModel, // Usar el viewModel compartido
                         onHomeClick = { nav.navigate("main/$nombre") },
                         onBibliotecaClick = { nav.navigate(Routes.BIBLIOTECA) },
                         onMessagesClick = { nav.navigate(Routes.MESSAGES) },
-                        onProfileClick = { nav.navigate(Routes.PROFILE) }
+                        onProfileClick = { nav.navigate(Routes.PROFILE) },
+                        onAddressClick = { nav.navigate(Routes.ADDRESS) } // Acción de navegación
                     )
                 } else {
                     LaunchedEffect(Unit) {
@@ -227,6 +236,13 @@ fun AppNav(modifier: Modifier = Modifier) {
         }
         composable(Routes.BOOK_DETAIL) {
             BookDetailScreen(onBack = { nav.popBackStack() })
+        }
+        // Composable para la pantalla de dirección
+        composable(Routes.ADDRESS) {
+            AddressScreen(
+                viewModel = profileViewModel, // Usar el viewModel compartido
+                onBack = { nav.popBackStack() }
+            )
         }
     }
 }

@@ -8,10 +8,25 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+data class Address(
+    val street: String = "",
+    val number: String = "",
+    val commune: String = "",
+    val region: String = ""
+) {
+    fun toDisplayString(): String {
+        if (street.isBlank() && number.isBlank() && commune.isBlank() && region.isBlank()) {
+            return ""
+        }
+        return "$street $number, $commune, $region"
+    }
+}
+
 data class UserProfile(
     val fullName: String,
     val email: String,
-    val photoUrl: String
+    val photoUrl: String,
+    val address: Address?
 )
 
 class ProfileViewModel(private val authRepository: AuthRepository, private val sessionPrefs: SessionPrefs) : ViewModel() {
@@ -21,18 +36,27 @@ class ProfileViewModel(private val authRepository: AuthRepository, private val s
 
     fun loadUserProfile() {
         viewModelScope.launch {
-            _userProfile.value = UserProfile(
-                fullName = "Nombre de Usuario",
-                email = "usuario@example.com",
-                photoUrl = ""
-            )
+            // Para la simulación, cargamos un perfil sin dirección
+            if (_userProfile.value == null) {
+                _userProfile.value = UserProfile(
+                    fullName = "Nombre de Usuario",
+                    email = "usuario@example.com",
+                    photoUrl = "",
+                    address = null
+                )
+            }
+        }
+    }
+
+    fun updateAddress(street: String, number: String, commune: String, region: String) {
+        viewModelScope.launch {
+            val newAddress = Address(street, number, commune, region)
+            _userProfile.value = _userProfile.value?.copy(address = newAddress)
         }
     }
 
     fun updateProfilePicture() {
         viewModelScope.launch {
-            // En una app real, aquí se abriría la galería para seleccionar una foto.
-            // Como simulación, cambiaremos la URL a una imagen de ejemplo.
             _userProfile.value = _userProfile.value?.copy(photoUrl = "new_photo")
         }
     }
