@@ -15,7 +15,9 @@ roomCommonJvm = "2.8.1"         # NUEVO EN VERSIONS *
 roomKtx = "2.8.1"               # NUEVO EN VERSIONS
 lifecycle = "2.8.6"
 material3 = "1.4.0"
-foundationLayout = "1.9.5"             # NUEVO EN VERSIONS
+foundationLayout = "1.9.5"
+foundation = "1.9.5"
+uiText = "1.9.5"             # NUEVO EN VERSIONS
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -41,7 +43,9 @@ androidx-room-common-jvm = { group = "androidx.room", name = "room-common-jvm", 
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }           # NUEVO EN LIBRARIES
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
-androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" } # NUEVO EN LIBRARIES
+androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+androidx-compose-ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiText" } # NUEVO EN LIBRARIES
 
 
 [plugins]
