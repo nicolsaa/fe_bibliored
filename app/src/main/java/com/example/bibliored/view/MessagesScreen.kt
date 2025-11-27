@@ -1,4 +1,3 @@
-
 package com.example.bibliored.view
 
 import androidx.compose.foundation.clickable
@@ -22,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -29,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bibliored.controller.messages.MessagesViewModel
 import com.example.bibliored.model.messages.Conversation
 import com.example.bibliored.view.navigation.Routes
@@ -42,18 +41,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Message
+import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.foundation.layout.Arrangement
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MessagesScreen(
-    viewModel: MessagesViewModel = viewModel(),
+    viewModel: MessagesViewModel,
     onConversationClick: (String) -> Unit,
     onBack: () -> Unit,
     onHomeClick: () -> Unit,
@@ -63,7 +63,11 @@ fun MessagesScreen(
 ) {
     val conversations by viewModel.conversations.collectAsState()
 
-    viewModel.loadConversations()
+    LaunchedEffect(conversations.size) {
+        if (conversations.isEmpty()) {
+            viewModel.loadConversations()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -154,7 +158,7 @@ fun MessagesHeader(conversationCount: Int) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.Message,
+                imageVector = Icons.AutoMirrored.Filled.Message,
                 contentDescription = null,
                 modifier = Modifier.size(32.dp),
                 tint = MaterialTheme.colorScheme.onPrimaryContainer
@@ -197,9 +201,7 @@ fun ConversationItem(conversation: Conversation, onConversationClick: (String) -
             .fillMaxWidth()
             .padding(horizontal = 8.dp)
             .clickable { onConversationClick(conversation.id) },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -209,12 +211,11 @@ fun ConversationItem(conversation: Conversation, onConversationClick: (String) -
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Avatar con badge de estado
+            // Avatar
             Box(
                 modifier = Modifier.size(56.dp),
                 contentAlignment = Alignment.BottomEnd
             ) {
-                // Avatar circular
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -236,35 +237,14 @@ fun ConversationItem(conversation: Conversation, onConversationClick: (String) -
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
-
-                // Badge de mensajes no leídos
-                if (conversation.unreadCount > 0) {
-                    Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.error),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = if (conversation.unreadCount > 9) "9+" else conversation.unreadCount.toString(),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onError,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // Contenido de la conversación
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
@@ -278,7 +258,7 @@ fun ConversationItem(conversation: Conversation, onConversationClick: (String) -
                     )
 
                     Text(
-                        text = conversation.timestamp.toTimeAgo(),
+                        text = toTimeAgo(conversation.timestamp),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 8.dp)
@@ -286,6 +266,19 @@ fun ConversationItem(conversation: Conversation, onConversationClick: (String) -
                 }
 
                 Spacer(modifier = Modifier.height(4.dp))
+
+                // Mostrar información del libro si existe
+                conversation.bookInfo?.let { bookInfo ->
+                    Text(
+                        text = "📚 ${bookInfo.title}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                }
 
                 Text(
                     text = conversation.lastMessage,
@@ -295,7 +288,7 @@ fun ConversationItem(conversation: Conversation, onConversationClick: (String) -
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     },
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontWeight = if (conversation.unreadCount > 0) FontWeight.Medium else FontWeight.Normal
                 )
@@ -311,10 +304,10 @@ fun EmptyMessagesState() {
             .fillMaxSize()
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+        verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            imageVector = Icons.Default.Forum,
+            imageVector = Icons.Filled.Forum,
             contentDescription = "Sin mensajes",
             modifier = Modifier.size(120.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
@@ -350,7 +343,7 @@ fun EmptyMessagesState() {
 }
 
 // Función de extensión para formatear timestamp (necesitarás implementar la lógica)
-private fun Long.toTimeAgo(): String {
+private fun toTimeAgo(_timestamp: Long): String {
     // Implementa tu lógica para formatear la fecha
     return "Hoy" // Placeholder
 }
