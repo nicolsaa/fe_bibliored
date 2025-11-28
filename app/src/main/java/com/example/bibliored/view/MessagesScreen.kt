@@ -63,7 +63,7 @@ fun MessagesScreen(
 ) {
     val conversations by viewModel.conversations.collectAsState()
 
-    LaunchedEffect(conversations.size) {
+    LaunchedEffect(Unit) {
         if (conversations.isEmpty()) {
             viewModel.loadConversations()
         }
