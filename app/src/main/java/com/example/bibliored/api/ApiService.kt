@@ -1,6 +1,8 @@
 package com.example.bibliored.api
 
+import com.example.bibliored.network.dto.LoginDto
 import com.example.bibliored.network.dto.RegistroUsuarioDto
+import com.example.bibliored.network.dto.UsuarioDto
 import com.example.bibliored.network.dto.response.LibroResponseDto
 import com.example.bibliored.network.dto.response.LibroUserResponseDto
 
@@ -23,4 +25,7 @@ interface ApiService {
 
     @GET("/libros")
     suspend fun getBooks(): Response<LibroUserResponseDto>
+
+    @POST("login")
+    suspend fun login(@Body body: LoginDto): Response<UsuarioDto>
 }

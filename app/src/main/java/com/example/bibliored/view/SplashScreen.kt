@@ -67,11 +67,11 @@ fun SplashScreen(
         if (!navigated) {
             // ✅ VERIFICACIÓN MEJORADA con manejo seguro del nombre
             if (session.isLoggedIn) {
-                val userName = session.userName ?: "Usuario"
+                val user_name = session.userName
 
                 // ✅ Verificación adicional para asegurar que el nombre no esté vacío
-                if (userName.isNotBlank()) {
-                    onGoHome(userName)
+                if (user_name.isNotBlank()) {
+                    onGoHome(user_name)
                 } else {
                     // Si el nombre está vacío, vamos al login
                     onGoLogin()
@@ -106,7 +106,7 @@ fun SplashScreen(
             // ✅ Opcional: Texto de depuración para ver qué está pasando
             if (session.isLoggedIn) {
                 Text(
-                    text = "Bienvenido: ${session.userName ?: "Usuario"}",
+                    text = "Bienvenido: ${session.userName}",
                     modifier = Modifier.alpha(0.7f)
                 )
             }

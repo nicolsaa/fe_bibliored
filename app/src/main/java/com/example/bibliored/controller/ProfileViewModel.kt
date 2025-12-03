@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bibliored.api.AuthRepository
 import com.example.bibliored.data.SessionPrefs
+import com.example.bibliored.model.Session
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 data class Address(
@@ -35,15 +37,17 @@ class ProfileViewModel(private val authRepository: AuthRepository, private val s
     val userProfile: StateFlow<UserProfile?> = _userProfile
 
     fun loadUserProfile() {
-        viewModelScope.launch {
-            // Para la simulación, cargamos un perfil sin dirección
-            if (_userProfile.value == null) {
-                _userProfile.value = UserProfile(
-                    fullName = "Nombre de Usuario",
-                    email = "usuario@example.com",
-                    photoUrl = "",
-                    address = null
-                )
+        if (_userProfile.value == null) {
+            viewModelScope.launch {
+                val session = sessionPrefs.sessionFlow.first()
+                if (session.isLoggedIn) {
+                    _userProfile.value = UserProfile(
+                        fullName = session.userName,
+                        email = session.userEmail,
+                        photoUrl = "",
+                        address = null
+                    )
+                }
             }
         }
     }
