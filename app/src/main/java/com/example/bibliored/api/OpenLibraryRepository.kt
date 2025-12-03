@@ -82,7 +82,7 @@ suspend fun getLibroByIsbn(
         return refs.mapNotNull { ref ->
             val raw = ref.key ?: return@mapNotNull null
             val key = raw.trimStart('/') // "/authors/OL123A" -> "authors/OL123A"
-            val dto = openLibraryService.getGenericByKey(key) // devuelve name, etc.
+            val dto = openLibraryService.getGenericByKey(key.split("/")[1]) // devuelve name, etc.
             val nombre = dto.name ?: return@mapNotNull null
             Autor(id = 0L, nombre = nombre) // OL no da id numérico estable
         }
@@ -91,13 +91,6 @@ suspend fun getLibroByIsbn(
     companion object {
         /** Construye el repo con RetrofitProvider (Moshi + logging BODY). */
         fun default(): OpenLibraryRepository {
-            val config = ApiConfig(
-                baseUrl = "https://openlibrary.org/",
-                converter = ConverterKind.MOSHI,
-                enableLogging = true, // si molestan los logs, pon false
-                userAgent = "BiblioRed/1.0 (Android)"
-            )
-
             val configApi = ApiConfig(
                 baseUrl = "http://10.0.2.2:8080",
                 converter = ConverterKind.MOSHI,
@@ -105,7 +98,7 @@ suspend fun getLibroByIsbn(
                 userAgent = "BiblioRed/1.0 (Android)"
             )
 
-            val openLibrary  = RetrofitProvider.create<OpenLibraryService>(config)
+            val openLibrary  = RetrofitProvider.create<OpenLibraryService>(configApi)
             val api  = RetrofitProvider.create<ApiService>(configApi)
             return OpenLibraryRepository(openLibrary, api)
         }
@@ -137,8 +130,9 @@ suspend fun getLibroByIsbn(
     }
 
 private fun buildPortada(coverId: Int?, isbn: String?): PortadaUrl? {
-    fun byId(id: Int, size: String)      = "https://covers.openlibrary.org/b/id/${id}-${size}.jpg"
-    fun byIsbn(code: String, size: String) = "https://covers.openlibrary.org/b/isbn/${code}-${size}.jpg"
+    //mover al backend
+    fun byId(id: Int, size: String)      = "http://10.0.2.2:8080/openlibrary/getCover/${id}-${size}"
+    fun byIsbn(code: String, size: String) = "http://10.0.2.2:8080/openlibrary/getIsbnCover/${code}-${size}"
 
     return when {
         coverId != null -> PortadaUrl(

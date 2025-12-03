@@ -65,7 +65,7 @@ fun AppNav(modifier: Modifier = Modifier) {
             SplashScreen(
                 sessionPrefs = sessionPrefs,
                 onGoHome = { nombre ->
-                    nav.navigate("main/$nombre") {
+                nav.navigate(Routes.LOGIN) {
                         popUpTo(Routes.SPLASH) { inclusive = true }
                     }
                 },
@@ -92,8 +92,8 @@ fun AppNav(modifier: Modifier = Modifier) {
 
         composable(Routes.FORM_SCREEN) {
             FormScreen(onRegistered = { nombre ->
-                nav.navigate("main/$nombre") {
-                    popUpTo(Routes.LOGIN) { inclusive = true }
+                nav.navigate(Routes.LOGIN) {
+                    popUpTo(nav.graph.id) { inclusive = true }
                 }
             })
         }
