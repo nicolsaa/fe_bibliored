@@ -51,7 +51,7 @@ class AuthViewModel(
                 onSuccess = {
                     sessionPrefs.setLoggedIn(
                         it.id.toString(),
-                        it.nombre,
+                        "${it.nombre} ${it.apellido}",
                         it.correo
                     )
                     LoginState.Success(it)

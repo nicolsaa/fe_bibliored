@@ -123,7 +123,7 @@ fun AddressScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Esta dirección se usará para las entregas de libros",
+                        text = "Esta dirección se usará para coordinar los prestamos cerca de ti",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.weight(1f)
