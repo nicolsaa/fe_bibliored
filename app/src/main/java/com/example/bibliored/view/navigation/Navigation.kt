@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.bibliored.controller.BookViewModel
 import com.example.bibliored.controller.ProfileViewModel
 import com.example.bibliored.controller.ProfileViewModelFactory
 import com.example.bibliored.controller.messages.MessagesViewModel
@@ -55,6 +56,7 @@ fun AppNav(modifier: Modifier = Modifier) {
     // ViewModels compartidos
     val profileViewModel: ProfileViewModel = viewModel(factory = ProfileViewModelFactory(ctx))
     val messagesViewModel: MessagesViewModel = viewModel()
+    val bookViewModel: BookViewModel = viewModel()
 
     NavHost(
         navController = nav,
@@ -229,7 +231,18 @@ fun AppNav(modifier: Modifier = Modifier) {
             }
         }
         composable(Routes.BOOK_DETAIL) {
-            BookDetailScreen(onBack = { nav.popBackStack() })
+            val session by sessionPrefs.sessionFlow.collectAsState(initial = null)
+            BookDetailScreen(
+                onBack = { nav.popBackStack() },
+                onPublish = { libro ->
+                    session?.let { currentSession ->
+                        bookViewModel.publishBook(libro, currentSession.userName)
+                        // Pop back to the previous screen (BibliotecaScreen), inclusive, 
+                        // to reveal the HomeScreen underneath.
+                        nav.popBackStack(Routes.BIBLIOTECA, inclusive = true)
+                    }
+                }
+            )
         }
         // Composable para la pantalla de dirección
         composable(Routes.ADDRESS) {
@@ -249,6 +262,7 @@ fun AppNav(modifier: Modifier = Modifier) {
                 HomeScreen(
                     nombreCompleto = nombre,
                     sessionPrefs = sessionPrefs,
+                    bookViewModel = bookViewModel,
                     onLogout = {
                         scope.launch {
                             sessionPrefs.clear()

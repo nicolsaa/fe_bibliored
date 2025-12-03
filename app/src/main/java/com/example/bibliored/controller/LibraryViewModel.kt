@@ -29,9 +29,6 @@ class LibraryViewModel(
     private val _libros = MutableStateFlow<List<Libro>>(emptyList())
     val libros: StateFlow<List<Libro>> = _libros.asStateFlow()
 
-    private val _librosParaIntercambio = MutableStateFlow<List<Libro>>(emptyList())
-    val librosParaIntercambio: StateFlow<List<Libro>> = _librosParaIntercambio.asStateFlow()
-
     private lateinit var userName: String
     private lateinit var userEmail: String
 
@@ -56,18 +53,6 @@ class LibraryViewModel(
         val librosList = libroRepository.getLibroPorCorreo(userEmail).getOrThrow()
         _libros.value = librosList
         return librosList
-    }
-
-    suspend fun getLibrosParaIntercambio() {
-        val result = libroRepository.getLibros()
-        result.fold(
-            onSuccess = { libros ->
-                _librosParaIntercambio.value = libros.filter { it.paraIntercambio }
-            },
-            onFailure = { 
-                // Handle error
-            }
-        )
     }
 
     fun add(libro: Libro) {

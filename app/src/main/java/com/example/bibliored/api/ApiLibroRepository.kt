@@ -26,13 +26,14 @@ class ApiLibroRepository(private val api: ApiService) : LibroRepository {
                     val librosRaw: List<LibroItemDto> = body.libros
 
                     val libros = librosRaw.map { item ->
+                        val portadaUrl = item.coverUrl?.let { PortadaUrl(small = it, medium = it, large = it) }
                         Libro(
                             isbn10 = null,
                             isbn13 = item.barCode,
                             titulo = item.title,
                             autores = item.authorNames.map { Autor(nombre = it) },
                             descripcion = item.descripcion,
-                            portada = PortadaUrl(item.coverUrl, null, null),
+                            portada = portadaUrl,
                             workKey = null,
                             editionKey = null,
                             nombreUsuario = correo
@@ -66,18 +67,17 @@ class ApiLibroRepository(private val api: ApiService) : LibroRepository {
                 if (body != null) {
                     val librosRaw: List<LibroItemDto> = body.libros
                     val libros = librosRaw.map { item ->
+                        val portadaUrl = item.coverUrl?.let { PortadaUrl(small = it, medium = it, large = it) }
                         Libro(
                             isbn10 = null,
                             isbn13 = item.barCode,
                             titulo = item.title,
                             autores = item.authorNames.map { Autor(nombre = it) },
                             descripcion = item.descripcion,
-                            portada = PortadaUrl(item.coverUrl, null, null),
+                            portada = portadaUrl,
                             workKey = null,
                             editionKey = null,
-                            nombreUsuario = null, // No hay nombre de usuario en este endpoint
-                            paraIntercambio = item.paraIntercambio,
-                            paraRegalo = item.paraRegalo
+                            nombreUsuario = null // No hay nombre de usuario en este endpoint
                         )
                     }
                     Result.success(libros)
