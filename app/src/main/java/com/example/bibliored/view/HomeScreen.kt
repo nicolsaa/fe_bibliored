@@ -61,13 +61,13 @@ fun HomeScreen(
 
             ),
             workKey = "/works/OL45804W",
-            editionKey = "/books/OL26336839M",
+            editionKey = "/books/OL51693993M",
             nombreUsuario = "Juan Perez",
             userId = "user123" // Añadir userId
         ),
         Libro(
-            isbn10 = "6070714865",
-            isbn13 = "9786070714863",
+            isbn10 = "9500700298",
+            isbn13 = null,
             titulo = "Cien Años de Soledad",
             autores = listOf(Autor(nombre = "Gabriel García Márquez")),
             descripcion = "Cien años de soledad es una novela del escritor colombiano Gabriel García Márquez, ganador del Premio Nobel de Literatura en 1982. Es considerada una obra maestra de la literatura hispanoamericana y universal, cumbre del denominado \"realismo mágico\". Es asimismo una de las obras más traducidas y leídas en español. Narra la historia de la familia Buendía a lo largo de siete generaciones en el pueblo ficticio de Macondo.",
@@ -77,7 +77,7 @@ fun HomeScreen(
                 large = "https://covers.openlibrary.org/b/id/8264768-L.jpg"
             ),
             workKey = "/works/OL45883W",
-            editionKey = "/books/OL24351648M",
+            editionKey = "/books/OL5583516M",
             nombreUsuario = "Maria Rodriguez",
             userId = "user456" // Añadir userId
         ),
