@@ -177,7 +177,7 @@ fun AddBookScreen(
                         modifier = Modifier.width(320.dp)
                     )
 
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(3.dp))
 
                     // Checkboxes for exchange and gift
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -187,6 +187,8 @@ fun AddBookScreen(
                         )
                         Text("Apto para intercambio")
                     }
+                    Spacer(Modifier.height(3.dp))
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
                             checked = paraRegalo,
