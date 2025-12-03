@@ -131,8 +131,8 @@ suspend fun getLibroByIsbn(
 
 private fun buildPortada(coverId: Int?, isbn: String?): PortadaUrl? {
     //mover al backend
-    fun byId(id: Int, size: String)      = "https://covers.openlibrary.org/b/id/${id}-${size}.jpg"
-    fun byIsbn(code: String, size: String) = "https://covers.openlibrary.org/b/isbn/${code}-${size}.jpg"
+    fun byId(id: Int, size: String)      = "http://10.0.2.2:8080/openlibrary/getCover/${id}-${size}"
+    fun byIsbn(code: String, size: String) = "http://10.0.2.2:8080/openlibrary/getIsbnCover/${code}-${size}"
 
     return when {
         coverId != null -> PortadaUrl(
