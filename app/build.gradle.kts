@@ -80,15 +80,20 @@ dependencies {
     implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
-
-
     // Coil (Compose)
-
     implementation("io.coil-kt:coil-compose:2.6.0")
     //iconos
     implementation("androidx.compose.material:material-icons-extended")
     //dataStore
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+    // CameraX
+    implementation("androidx.camera:camera-core:1.3.4")
+    implementation("androidx.camera:camera-camera2:1.3.4")
+    implementation("androidx.camera:camera-lifecycle:1.3.4")
+    implementation("androidx.camera:camera-view:1.3.4")
+    // ML Kit Barcode Scanning (QR incluido)
+    //
+    implementation("com.google.mlkit:barcode-scanning:17.2.0")
 
     ksp(libs.androidx.room.compiler)                // DEPENDENCIES EN BUILD.GRANDE.KTS
     implementation(libs.androidx.lifecycle.viewmodel.compose)   // DEPENDENCIES EN BUILD.GRANDE.KTS
