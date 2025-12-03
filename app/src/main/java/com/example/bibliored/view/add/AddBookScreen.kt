@@ -37,8 +37,6 @@ fun AddBookScreen(
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var guardado by remember { mutableStateOf(false) }
-    var paraIntercambio by remember { mutableStateOf(false) }
-    var paraRegalo by remember { mutableStateOf(false) }
     var mostrarScanner by remember { mutableStateOf(false) }
 
     val _estado: MutableStateFlow<LoginState> = MutableStateFlow(LoginState.Idle)
@@ -177,33 +175,10 @@ fun AddBookScreen(
                         modifier = Modifier.width(320.dp)
                     )
 
-                    Spacer(Modifier.height(3.dp))
-
-                    // Checkboxes for exchange and gift
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = paraIntercambio,
-                            onCheckedChange = { paraIntercambio = it }
-                        )
-                        Text("Apto para intercambio")
-                    }
-                    Spacer(Modifier.height(3.dp))
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = paraRegalo,
-                            onCheckedChange = { paraRegalo = it }
-                        )
-                        Text("Apto para regalo")
-                    }
-
                     Spacer(Modifier.height(8.dp))
 
                     Button(onClick = {
-                        val libroActualizado = libro.copy(
-                            paraIntercambio = paraIntercambio,
-                            paraRegalo = paraRegalo
-                        )
+                        val libroActualizado = libro.copy()
                         scope.launch {
                             libraryVm.add(libroActualizado)
                             guardado = true

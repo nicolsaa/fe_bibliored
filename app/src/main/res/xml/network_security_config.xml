@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <base-config cleartextTrafficPermitted="true"/>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">10.0.2.2</domain> <!-- Local backend for emulator -->
+    </domain-config>
+    <domain-config>
+        <domain includeSubdomains="true">covers.openlibrary.org</domain>
+    </domain-config>
 </network-security-config>

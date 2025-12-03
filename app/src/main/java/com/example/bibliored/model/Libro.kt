@@ -11,7 +11,5 @@ data class Libro(
     val workKey: String?,         // Key del "work" (obra principal)
     val editionKey: String?,       // Key específica de la edición (/books/OL...)
     val nombreUsuario: String?,
-    val paraIntercambio: Boolean = false,
-    val paraRegalo: Boolean = false,
     val userId: String? = null // Añadir este campo
 )

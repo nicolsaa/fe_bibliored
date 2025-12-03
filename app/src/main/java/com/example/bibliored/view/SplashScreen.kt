@@ -106,7 +106,7 @@ fun SplashScreen(
             // ✅ Opcional: Texto de depuración para ver qué está pasando
             if (session.isLoggedIn) {
                 Text(
-                    text = "Bienvenido: ${session.userName}",
+                    text = "Bienvenido",
                     modifier = Modifier.alpha(0.7f)
                 )
             }

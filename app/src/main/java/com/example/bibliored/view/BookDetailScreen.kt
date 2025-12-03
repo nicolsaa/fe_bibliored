@@ -16,6 +16,7 @@ import com.example.bibliored.util.SelectedBookNav
 fun BookDetailScreen(
     libro: Libro? = null,
     onBack: (() -> Unit)? = null,
+    onPublish: ((Libro) -> Unit)? = null,
     onDone: (() -> Unit)? = null
 ) {
     val libroData = libro ?: SelectedBookNav.currentLibro
@@ -47,6 +48,13 @@ fun BookDetailScreen(
             Text(autores, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onBackground)
             Spacer(Modifier.height(8.dp))
             Text(libroData.descripcion ?: "", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onBackground)
+            Spacer(Modifier.weight(1f))
+            Button(
+                onClick = { onPublish?.invoke(libroData) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Publicar libro")
+            }
         }
     }
 }
