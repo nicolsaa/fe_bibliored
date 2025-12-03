@@ -26,8 +26,7 @@ suspend fun getLibroByIsbn(
         resolveAuthors: Boolean = true
     ): Result<Libro> = withContext(Dispatchers.IO) {
         runCatching {
-            val dnsOk = NetworkDiagnostics.isHostResolvable("openlibrary.org")
-            if (!dnsOk) throw java.io.IOException("DNS resolution failed for host openlibrary.org")
+
             val dto = openLibraryService.getEditionByIsbn(isbn)
 
             val autores: List<Autor> = if (resolveAuthors) {
