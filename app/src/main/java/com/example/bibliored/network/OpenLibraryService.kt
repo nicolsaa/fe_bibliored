@@ -12,14 +12,14 @@ interface OpenLibraryService {
     Cada función dentro de esta interfaz representa una petición HTTP a la API pública de OpenLibrary.
     💡 En resumen:
     Tú defines “qué quiero pedir”, y Retrofit se encarga de hacerlo por ti.*/
-    @GET("isbn/{isbn}.json")
+    @GET("/openlibrary/getBooks/{isbn}")
     suspend fun getEditionByIsbn(@Path("isbn") isbn: String): OpenLibraryEditionDto
     /*Realiza una petición GET a la URL: https://openlibrary.org/isbn/{isbn}.json
     * Por ejemplo, si isbn = "9780141036144", la URL completa será: https://openlibrary.org/isbn/9780141036144.json
 
     * Devuelve un objeto de tipo OpenLibraryEditionDto (una data class que representa la estructura del JSON que devuelve OpenLibrary para una “edición” de libro).*/
 
-    @GET("{key}.json") // key tipo "authors/OL123A" o "works/OL123W" (sin slash inicial)
+    @GET("/openlibrary/getAuthors/{key}") // key tipo "authors/OL123A" o "works/OL123W" (sin slash inicial)
     suspend fun getGenericByKey(@Path("key") key: String): GenericKeyDto
     /*Llama a rutas más genéricas de la API, como:https://openlibrary.org/authors/OL123A.json
                                                   https://openlibrary.org/works/OL123W.json
