@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.bibliored.controller.LibraryViewModel
 import com.example.bibliored.data.SessionPrefs
+import com.example.bibliored.data.dataStore
 import com.example.bibliored.model.Libro
 import com.example.bibliored.view.navigation.Routes
 
@@ -46,7 +47,7 @@ fun BibliotecaScreen(
     onLibroClick: (Libro) -> Unit
 ) {
     val ctx = LocalContext.current
-    val sessionPrefs = remember(ctx) { SessionPrefs(ctx) }
+    val sessionPrefs = remember(ctx) { SessionPrefs(ctx.dataStore) }
     val vm = remember { LibraryViewModel(sessionPrefs = sessionPrefs) }
 
     val libros by vm.libros.collectAsStateWithLifecycle()

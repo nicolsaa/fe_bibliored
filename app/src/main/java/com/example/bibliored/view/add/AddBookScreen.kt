@@ -15,6 +15,7 @@ import com.example.bibliored.controller.LibroViewModel
 import com.example.bibliored.controller.LoginState
 import com.example.bibliored.controller.UiState
 import com.example.bibliored.data.SessionPrefs
+import com.example.bibliored.data.dataStore
 import com.example.bibliored.model.Libro
 import com.example.bibliored.view.camera.QrScannerScreen
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,7 +43,7 @@ fun AddBookScreen(
     val _estado: MutableStateFlow<LoginState> = MutableStateFlow(LoginState.Idle)
     val estado: StateFlow<LoginState> = _estado.asStateFlow()
     val ctx = LocalContext.current
-    val sessionPrefs = remember(ctx) { SessionPrefs(ctx) }
+    val sessionPrefs = remember(ctx) { SessionPrefs(ctx.dataStore) }
     val vm = remember { LibroViewModel(sessionPrefs = sessionPrefs) }
     val libraryVm = remember { LibraryViewModel(sessionPrefs = sessionPrefs) }
     val scope = rememberCoroutineScope()

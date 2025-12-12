@@ -24,6 +24,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import com.example.bibliored.R
+import com.example.bibliored.data.dataStore
 
 /*Muestra el formulario de inicio de sesión.
 Cuando el login es exitoso, llama a onLoggedIn(nombre) → navega al Home.
@@ -34,11 +35,10 @@ También limpia el back stack (ya no puedes volver al login).*/
 fun LoginScreen(
     onLoggedIn: (nombreCompleto: String) -> Unit,
     onNavigateToRegister: () -> Unit = {},
-    //vm: AuthViewModel = viewModel()
+    vm: AuthViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val sessionPrefs = remember { SessionPrefs(context) }
-    val vm = remember { AuthViewModel(sessionPrefs = sessionPrefs) }
+    val sessionPrefs = remember { SessionPrefs(context.dataStore) }
 
     val estado = vm.estado.collectAsStateWithLifecycle().value // estado actual del login
     val userExistsState by vm.userExists.collectAsStateWithLifecycle()
@@ -145,6 +145,3 @@ fun LoginScreen(
         }
     }
 }
-
-
-

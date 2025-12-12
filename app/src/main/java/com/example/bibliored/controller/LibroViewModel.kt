@@ -3,6 +3,7 @@ package com.example.bibliored.controller
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bibliored.api.OpenLibraryRepository
+import com.example.bibliored.data.ISessionPrefs // <-- CORRECTION HERE
 import com.example.bibliored.data.SessionPrefs
 import com.example.bibliored.model.Libro
 import kotlinx.coroutines.delay
@@ -22,7 +23,7 @@ sealed interface UiState {
 
 class LibroViewModel(
     private val repo: OpenLibraryRepository = OpenLibraryRepository.default(),
-    private val sessionPrefs: SessionPrefs
+    private val sessionPrefs: ISessionPrefs // <-- CORRECTION HERE
 ) : ViewModel() {
 
     private val _estado = MutableStateFlow<UiState>(UiState.Idle)

@@ -18,6 +18,7 @@ import com.example.bibliored.controller.ProfileViewModel
 import com.example.bibliored.controller.ProfileViewModelFactory
 import com.example.bibliored.controller.messages.MessagesViewModel
 import com.example.bibliored.data.SessionPrefs
+import com.example.bibliored.data.dataStore
 import com.example.bibliored.util.SelectedBookNav
 import com.example.bibliored.view.AddressScreen
 import com.example.bibliored.view.BibliotecaScreen
@@ -50,7 +51,7 @@ object Routes {
 fun AppNav(modifier: Modifier = Modifier) {
     val nav = rememberNavController()
     val ctx = LocalContext.current
-    val sessionPrefs = SessionPrefs(ctx)
+    val sessionPrefs = SessionPrefs(ctx.dataStore)
     val scope = rememberCoroutineScope()
 
     // ViewModels compartidos
