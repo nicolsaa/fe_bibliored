@@ -38,6 +38,10 @@ android {
     buildFeatures {
         compose = true
     }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -92,10 +96,20 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.3.4")
     implementation("androidx.camera:camera-view:1.3.4")
     // ML Kit Barcode Scanning (QR incluido)
-    //
     implementation("com.google.mlkit:barcode-scanning:17.2.0")
+    // Mockito
+    testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 
-    ksp(libs.androidx.room.compiler)                // DEPENDENCIES EN BUILD.GRANDE.KTS
-    implementation(libs.androidx.lifecycle.viewmodel.compose)   // DEPENDENCIES EN BUILD.GRANDE.KTS
-    implementation(libs.androidx.lifecycle.runtime.ktx)         // DEPENDENCIES EN BUILD.GRANDE.KTS
+    // MockK
+    testImplementation("io.mockk:mockk:1.13.10")
+    // AndroidX Test for Compose
+    testImplementation("androidx.compose.ui:ui-test-junit4:1.6.8")
+
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+
+
 }

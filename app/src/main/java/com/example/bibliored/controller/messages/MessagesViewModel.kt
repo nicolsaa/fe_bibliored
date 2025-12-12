@@ -5,6 +5,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bibliored.data.SessionPrefs
+import com.example.bibliored.data.dataStore
 import com.example.bibliored.data.messages.MessagesRepository
 import com.example.bibliored.model.messages.Conversation
 import com.example.bibliored.model.messages.Message
@@ -17,7 +18,7 @@ import kotlinx.coroutines.launch
 class MessagesViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: MessagesRepository = MessagesRepository()
-    private val sessionPrefs = SessionPrefs(application)
+    private val sessionPrefs = SessionPrefs(application.dataStore)
 
     private val _conversations = MutableStateFlow<List<Conversation>>(emptyList())
     val conversations: StateFlow<List<Conversation>> = _conversations.asStateFlow()
